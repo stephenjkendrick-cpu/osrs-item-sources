@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Item sources</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --bg: #12100e;
+  --bg-raise: #1c1914;
+  --bg-sink: #0e0c0a;
+  --line: #3c3428;
+  --line-strong: #5c4e36;
+  --text: #f3ead8;
+  --muted: #b5a58c;
+  --gold: #e4c36a;
+  --gold-dim: #a6853d;
+  --amount-bg: #1a2a1e;
+  --amount-fg: #d7f0cc;
+  --amount-line: #3d6a48;
+  --rate-bg: #2c2414;
+  --rate-fg: #f6e2a8;
+  --rate-line: #8a6a32;
+  --missing-bg: #241e1a;
+  --missing-fg: #b3a394;
+  --missing-line: #4a4036;
+  --price-bg: #2a2218;
+  --price-fg: #f0d7b0;
+  --danger: #f0c2b4;
+  --danger-bg: #3a2420;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --serif: Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(228, 195, 106, 0.08), transparent 50%),
+    linear-gradient(180deg, #1a1612 0%, var(--bg) 280px);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+a { color: var(--gold); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: #ffe3a0; }
+
+.top, main, footer { width: min(980px, calc(100% - 28px)); margin: 0 auto; }
+.top { padding: 28px 0 8px; }
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--gold-dim);
+}
+h1 {
+  margin: 4px 0 6px;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2rem, 5vw, 2.7rem);
+  letter-spacing: -0.02em;
+}
+.lede { margin: 0; color: var(--muted); max-width: 42rem; }
+
+.search {
+  position: relative;
+  margin: 22px 0 18px;
+  padding: 14px;
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+.search-label {
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.search-row { display: flex; gap: 8px; }
+input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 1.05rem;
+  color: var(--text);
+  background: var(--bg-sink);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+input[type="search"]:focus {
+  outline: 2px solid var(--gold-dim);
+  outline-offset: 1px;
+}
+button, .tries button {
+  font: inherit;
+  cursor: pointer;
+}
+.search-row button {
+  border: 0;
+  border-radius: 12px;
+  padding: 0 16px;
+  background: linear-gradient(180deg, #f0d48a, #c4963a);
+  color: #2a1d08;
+  font-weight: 700;
+  min-width: 96px;
+}
+.search-row button:hover { filter: brightness(1.05); }
+.search-row button:disabled { opacity: 0.6; cursor: progress; }
+
+.suggest {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 6px;
+  background: var(--bg-sink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.suggest button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.suggest button:hover, .suggest button[aria-selected="true"] { background: #2a2418; }
+
+.tries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.tries button {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+.tries button:hover { border-color: var(--gold-dim); background: #2a2418; }
+
+.status {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.status.error {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-color: #6a3a32;
+}
+.status ul { margin: 8px 0 0; padding-left: 18px; }
+.status a { font-weight: 600; }
+
+.item-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 14px;
+}
+.item-head img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: #2a241c;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  image-rendering: pixelated;
+}
+.item-head h2 { margin: 0 0 4px; font-family: var(--serif); font-size: 1.6rem; }
+.item-meta { margin: 0; color: var(--muted); }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.badge {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 3px 8px;
+  border: 1px solid var(--line-strong);
+  color: var(--gold);
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0 14px;
+}
+.toolbar input {
+  flex: 1;
+  min-width: 160px;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--bg-sink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.toolbar select {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-sink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.count { color: var(--muted); font-size: 0.92rem; }
+
+.group { margin: 0 0 18px; }
+.group h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.cols, .source {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(92px, 0.7fr) minmax(110px, 0.8fr) minmax(120px, 0.9fr);
+  gap: 8px 12px;
+  align-items: center;
+}
+.cols {
+  padding: 0 12px 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.group.no-price .cols,
+.group.no-price .source {
+  grid-template-columns: minmax(0, 1fr) minmax(92px, 0.7fr) minmax(120px, 0.85fr);
+}
+.source {
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.source-name {
+  font-weight: 650;
+  color: var(--text);
+  text-decoration: none;
+}
+a.source-name:hover { color: var(--gold); }
+.source-detail { margin: 4px 0 0; color: var(--muted); font-size: 0.92rem; }
+.stat {
+  border-radius: 12px;
+  padding: 8px 10px;
+  min-height: 58px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+.stat-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  word-break: break-word;
+}
+.stat.amount { background: var(--amount-bg); color: var(--amount-fg); border-color: var(--amount-line); }
+.stat.rate { background: var(--rate-bg); color: var(--rate-fg); border-color: var(--rate-line); }
+.stat.price { background: var(--price-bg); color: var(--price-fg); border-color: var(--line-strong); }
+.stat.missing { background: var(--missing-bg); color: var(--missing-fg); border-color: var(--missing-line); font-weight: 600; }
+.stat-sub { display: block; font-weight: 500; font-size: 0.82rem; margin-top: 2px; opacity: 0.9; }
+.empty-group { color: var(--muted); }
+
+footer {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 18px 0 32px;
+}
+
+@media (max-width: 720px) {
+  .top, main, footer { width: min(100% - 20px, 980px); }
+  .cols { display: none; }
+  .source, .group.no-price .source {
+    grid-template-columns: 1fr 1fr;
+  }
+  .source-main { grid-column: 1 / -1; }
+  .stat.price { grid-column: 1 / -1; }
+  .item-head { grid-template-columns: 56px 1fr; }
+  .item-head img { width: 56px; height: 56px; }
+  .search-row { flex-direction: column; }
+  .search-row button { min-height: 46px; }
+}
+
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <p class="eyebrow">Old School RuneScape</p>
+      <h1>Item sources</h1>
+      <p class="lede">Every drop, shop, and other origin the official wiki lists. Amounts and rates stay visible.</p>
+    </div>
+  </header>
+
+  <main>
+    <form id="search-form" class="search" role="search" autocomplete="off" onsubmit="return false;">
+      <label class="search-label" for="q">Item name</label>
+      <div class="search-row">
+        <input id="q" name="q" type="text" enterkeyhint="search" placeholder="snapdragon seed, abyssal whip…" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button type="button" id="lookup-btn">Look up</button>
+      </div>
+      <ul id="suggest" class="suggest" hidden></ul>
+      <div class="tries" aria-label="Examples">
+        <span>Try</span>
+        <button type="button" data-try="snapdragon seed">snapdragon seed</button>
+        <button type="button" data-try="abyssal whip">abyssal whip</button>
+        <button type="button" data-try="dragon bones">dragon bones</button>
+        <button type="button" data-try="law rune">law rune</button>
+        <button type="button" data-try="anti-dragon shield">anti-dragon shield</button>
+      </div>
+    </form>
+
+    <section id="status" class="status" hidden></section>
+    <section id="results" class="results" hidden></section>
+  </main>
+
+  <footer>
+    Data from the <a href="https://oldschool.runescape.wiki/">Old School RuneScape Wiki</a> Bucket API and item pages. Not affiliated with Jagex.
+  </footer>
+  <script>
+const WIKI_API = "https://oldschool.runescape.wiki/api.php";
+const WIKI_PAGE = "https://oldschool.runescape.wiki/w/";
+const CACHE_TTL = 15 * 60 * 1000;
+const MAX_DROPS = 5000;
+const cache = new Map();
+const ENT = {"Aacute": "Á", "aacute": "á", "Aacute;": "Á", "aacute;": "á", "Abreve;": "Ă", "abreve;": "ă", "ac;": "∾", "acd;": "∿", "acE;": "∾̳", "Acirc": "Â", "acirc": "â", "Acirc;": "Â", "acirc;": "â", "acute": "´", "acute;": "´", "Acy;": "А", "acy;": "а", "AElig": "Æ", "aelig": "æ", "AElig;": "Æ", "aelig;": "æ", "af;": "⁡", "Afr;": "𝔄", "afr;": "𝔞", "Agrave": "À", "agrave": "à", "Agrave;": "À", "agrave;": "à", "alefsym;": "ℵ", "aleph;": "ℵ", "Alpha;": "Α", "alpha;": "α", "Amacr;": "Ā", "amacr;": "ā", "amalg;": "⨿", "AMP": "\u0026", "amp": "\u0026", "AMP;": "\u0026", "amp;": "\u0026", "And;": "⩓", "and;": "∧", "andand;": "⩕", "andd;": "⩜", "andslope;": "⩘", "andv;": "⩚", "ang;": "∠", "ange;": "⦤", "angle;": "∠", "angmsd;": "∡", "angmsdaa;": "⦨", "angmsdab;": "⦩", "angmsdac;": "⦪", "angmsdad;": "⦫", "angmsdae;": "⦬", "angmsdaf;": "⦭", "angmsdag;": "⦮", "angmsdah;": "⦯", "angrt;": "∟", "angrtvb;": "⊾", "angrtvbd;": "⦝", "angsph;": "∢", "angst;": "Å", "angzarr;": "⍼", "Aogon;": "Ą", "aogon;": "ą", "Aopf;": "𝔸", "aopf;": "𝕒", "ap;": "≈", "apacir;": "⩯", "apE;": "⩰", "ape;": "≊", "apid;": "≋", "apos;": "'", "ApplyFunction;": "⁡", "approx;": "≈", "approxeq;": "≊", "Aring": "Å", "aring": "å", "Aring;": "Å", "aring;": "å", "Ascr;": "𝒜", "ascr;": "𝒶", "Assign;": "≔", "ast;": "*", "asymp;": "≈", "asympeq;": "≍", "Atilde": "Ã", "atilde": "ã", "Atilde;": "Ã", "atilde;": "ã", "Auml": "Ä", "auml": "ä", "Auml;": "Ä", "auml;": "ä", "awconint;": "∳", "awint;": "⨑", "backcong;": "≌", "backepsilon;": "϶", "backprime;": "‵", "backsim;": "∽", "backsimeq;": "⋍", "Backslash;": "∖", "Barv;": "⫧", "barvee;": "⊽", "Barwed;": "⌆", "barwed;": "⌅", "barwedge;": "⌅", "bbrk;": "⎵", "bbrktbrk;": "⎶", "bcong;": "≌", "Bcy;": "Б", "bcy;": "б", "bdquo;": "„", "becaus;": "∵", "Because;": "∵", "because;": "∵", "bemptyv;": "⦰", "bepsi;": "϶", "bernou;": "ℬ", "Bernoullis;": "ℬ", "Beta;": "Β", "beta;": "β", "beth;": "ℶ", "between;": "≬", "Bfr;": "𝔅", "bfr;": "𝔟", "bigcap;": "⋂", "bigcirc;": "◯", "bigcup;": "⋃", "bigodot;": "⨀", "bigoplus;": "⨁", "bigotimes;": "⨂", "bigsqcup;": "⨆", "bigstar;": "★", "bigtriangledown;": "▽", "bigtriangleup;": "△", "biguplus;": "⨄", "bigvee;": "⋁", "bigwedge;": "⋀", "bkarow;": "⤍", "blacklozenge;": "⧫", "blacksquare;": "▪", "blacktriangle;": "▴", "blacktriangledown;": "▾", "blacktriangleleft;": "◂", "blacktriangleright;": "▸", "blank;": "␣", "blk12;": "▒", "blk14;": "░", "blk34;": "▓", "block;": "█", "bne;": "=⃥", "bnequiv;": "≡⃥", "bNot;": "⫭", "bnot;": "⌐", "Bopf;": "𝔹", "bopf;": "𝕓", "bot;": "⊥", "bottom;": "⊥", "bowtie;": "⋈", "boxbox;": "⧉", "boxDL;": "╗", "boxDl;": "╖", "boxdL;": "╕", "boxdl;": "┐", "boxDR;": "╔", "boxDr;": "╓", "boxdR;": "╒", "boxdr;": "┌", "boxH;": "═", "boxh;": "─", "boxHD;": "╦", "boxHd;": "╤", "boxhD;": "╥", "boxhd;": "┬", "boxHU;": "╩", "boxHu;": "╧", "boxhU;": "╨", "boxhu;": "┴", "boxminus;": "⊟", "boxplus;": "⊞", "boxtimes;": "⊠", "boxUL;": "╝", "boxUl;": "╜", "boxuL;": "╛", "boxul;": "┘", "boxUR;": "╚", "boxUr;": "╙", "boxuR;": "╘", "boxur;": "└", "boxV;": "║", "boxv;": "│", "boxVH;": "╬", "boxVh;": "╫", "boxvH;": "╪", "boxvh;": "┼", "boxVL;": "╣", "boxVl;": "╢", "boxvL;": "╡", "boxvl;": "┤", "boxVR;": "╠", "boxVr;": "╟", "boxvR;": "╞", "boxvr;": "├", "bprime;": "‵", "Breve;": "˘", "breve;": "˘", "brvbar": "¦", "brvbar;": "¦", "Bscr;": "ℬ", "bscr;": "𝒷", "bsemi;": "⁏", "bsim;": "∽", "bsime;": "⋍", "bsol;": "\\", "bsolb;": "⧅", "bsolhsub;": "⟈", "bull;": "•", "bullet;": "•", "bump;": "≎", "bumpE;": "⪮", "bumpe;": "≏", "Bumpeq;": "≎", "bumpeq;": "≏", "Cacute;": "Ć", "cacute;": "ć", "Cap;": "⋒", "cap;": "∩", "capand;": "⩄", "capbrcup;": "⩉", "capcap;": "⩋", "capcup;": "⩇", "capdot;": "⩀", "CapitalDifferentialD;": "ⅅ", "caps;": "∩︀", "caret;": "⁁", "caron;": "ˇ", "Cayleys;": "ℭ", "ccaps;": "⩍", "Ccaron;": "Č", "ccaron;": "č", "Ccedil": "Ç", "ccedil": "ç", "Ccedil;": "Ç", "ccedil;": "ç", "Ccirc;": "Ĉ", "ccirc;": "ĉ", "Cconint;": "∰", "ccups;": "⩌", "ccupssm;": "⩐", "Cdot;": "Ċ", "cdot;": "ċ", "cedil": "¸", "cedil;": "¸", "Cedilla;": "¸", "cemptyv;": "⦲", "cent": "¢", "cent;": "¢", "CenterDot;": "·", "centerdot;": "·", "Cfr;": "ℭ", "cfr;": "𝔠", "CHcy;": "Ч", "chcy;": "ч", "check;": "✓", "checkmark;": "✓", "Chi;": "Χ", "chi;": "χ", "cir;": "○", "circ;": "ˆ", "circeq;": "≗", "circlearrowleft;": "↺", "circlearrowright;": "↻", "circledast;": "⊛", "circledcirc;": "⊚", "circleddash;": "⊝", "CircleDot;": "⊙", "circledR;": "®", "circledS;": "Ⓢ", "CircleMinus;": "⊖", "CirclePlus;": "⊕", "CircleTimes;": "⊗", "cirE;": "⧃", "cire;": "≗", "cirfnint;": "⨐", "cirmid;": "⫯", "cirscir;": "⧂", "ClockwiseContourIntegral;": "∲", "CloseCurlyDoubleQuote;": "”", "CloseCurlyQuote;": "’", "clubs;": "♣", "clubsuit;": "♣", "Colon;": "∷", "colon;": ":", "Colone;": "⩴", "colone;": "≔", "coloneq;": "≔", "comma;": ",", "commat;": "@", "comp;": "∁", "compfn;": "∘", "complement;": "∁", "complexes;": "ℂ", "cong;": "≅", "congdot;": "⩭", "Congruent;": "≡", "Conint;": "∯", "conint;": "∮", "ContourIntegral;": "∮", "Copf;": "ℂ", "copf;": "𝕔", "coprod;": "∐", "Coproduct;": "∐", "COPY": "©", "copy": "©", "COPY;": "©", "copy;": "©", "copysr;": "℗", "CounterClockwiseContourIntegral;": "∳", "crarr;": "↵", "Cross;": "⨯", "cross;": "✗", "Cscr;": "𝒞", "cscr;": "𝒸", "csub;": "⫏", "csube;": "⫑", "csup;": "⫐", "csupe;": "⫒", "ctdot;": "⋯", "cudarrl;": "⤸", "cudarrr;": "⤵", "cuepr;": "⋞", "cuesc;": "⋟", "cularr;": "↶", "cularrp;": "⤽", "Cup;": "⋓", "cup;": "∪", "cupbrcap;": "⩈", "CupCap;": "≍", "cupcap;": "⩆", "cupcup;": "⩊", "cupdot;": "⊍", "cupor;": "⩅", "cups;": "∪︀", "curarr;": "↷", "curarrm;": "⤼", "curlyeqprec;": "⋞", "curlyeqsucc;": "⋟", "curlyvee;": "⋎", "curlywedge;": "⋏", "curren": "¤", "curren;": "¤", "curvearrowleft;": "↶", "curvearrowright;": "↷", "cuvee;": "⋎", "cuwed;": "⋏", "cwconint;": "∲", "cwint;": "∱", "cylcty;": "⌭", "Dagger;": "‡", "dagger;": "†", "daleth;": "ℸ", "Darr;": "↡", "dArr;": "⇓", "darr;": "↓", "dash;": "‐", "Dashv;": "⫤", "dashv;": "⊣", "dbkarow;": "⤏", "dblac;": "˝", "Dcaron;": "Ď", "dcaron;": "ď", "Dcy;": "Д", "dcy;": "д", "DD;": "ⅅ", "dd;": "ⅆ", "ddagger;": "‡", "ddarr;": "⇊", "DDotrahd;": "⤑", "ddotseq;": "⩷", "deg": "°", "deg;": "°", "Del;": "∇", "Delta;": "Δ", "delta;": "δ", "demptyv;": "⦱", "dfisht;": "⥿", "Dfr;": "𝔇", "dfr;": "𝔡", "dHar;": "⥥", "dharl;": "⇃", "dharr;": "⇂", "DiacriticalAcute;": "´", "DiacriticalDot;": "˙", "DiacriticalDoubleAcute;": "˝", "DiacriticalGrave;": "`", "DiacriticalTilde;": "˜", "diam;": "⋄", "Diamond;": "⋄", "diamond;": "⋄", "diamondsuit;": "♦", "diams;": "♦", "die;": "¨", "DifferentialD;": "ⅆ", "digamma;": "ϝ", "disin;": "⋲", "div;": "÷", "divide": "÷", "divide;": "÷", "divideontimes;": "⋇", "divonx;": "⋇", "DJcy;": "Ђ", "djcy;": "ђ", "dlcorn;": "⌞", "dlcrop;": "⌍", "dollar;": "$", "Dopf;": "𝔻", "dopf;": "𝕕", "Dot;": "¨", "dot;": "˙", "DotDot;": "⃜", "doteq;": "≐", "doteqdot;": "≑", "DotEqual;": "≐", "dotminus;": "∸", "dotplus;": "∔", "dotsquare;": "⊡", "doublebarwedge;": "⌆", "DoubleContourIntegral;": "∯", "DoubleDot;": "¨", "DoubleDownArrow;": "⇓", "DoubleLeftArrow;": "⇐", "DoubleLeftRightArrow;": "⇔", "DoubleLeftTee;": "⫤", "DoubleLongLeftArrow;": "⟸", "DoubleLongLeftRightArrow;": "⟺", "DoubleLongRightArrow;": "⟹", "DoubleRightArrow;": "⇒", "DoubleRightTee;": "⊨", "DoubleUpArrow;": "⇑", "DoubleUpDownArrow;": "⇕", "DoubleVerticalBar;": "∥", "DownArrow;": "↓", "Downarrow;": "⇓", "downarrow;": "↓", "DownArrowBar;": "⤓", "DownArrowUpArrow;": "⇵", "DownBreve;": "̑", "downdownarrows;": "⇊", "downharpoonleft;": "⇃", "downharpoonright;": "⇂", "DownLeftRightVector;": "⥐", "DownLeftTeeVector;": "⥞", "DownLeftVector;": "↽", "DownLeftVectorBar;": "⥖", "DownRightTeeVector;": "⥟", "DownRightVector;": "⇁", "DownRightVectorBar;": "⥗", "DownTee;": "⊤", "DownTeeArrow;": "↧", "drbkarow;": "⤐", "drcorn;": "⌟", "drcrop;": "⌌", "Dscr;": "𝒟", "dscr;": "𝒹", "DScy;": "Ѕ", "dscy;": "ѕ", "dsol;": "⧶", "Dstrok;": "Đ", "dstrok;": "đ", "dtdot;": "⋱", "dtri;": "▿", "dtrif;": "▾", "duarr;": "⇵", "duhar;": "⥯", "dwangle;": "⦦", "DZcy;": "Џ", "dzcy;": "џ", "dzigrarr;": "⟿", "Eacute": "É", "eacute": "é", "Eacute;": "É", "eacute;": "é", "easter;": "⩮", "Ecaron;": "Ě", "ecaron;": "ě", "ecir;": "≖", "Ecirc": "Ê", "ecirc": "ê", "Ecirc;": "Ê", "ecirc;": "ê", "ecolon;": "≕", "Ecy;": "Э", "ecy;": "э", "eDDot;": "⩷", "Edot;": "Ė", "eDot;": "≑", "edot;": "ė", "ee;": "ⅇ", "efDot;": "≒", "Efr;": "𝔈", "efr;": "𝔢", "eg;": "⪚", "Egrave": "È", "egrave": "è", "Egrave;": "È", "egrave;": "è", "egs;": "⪖", "egsdot;": "⪘", "el;": "⪙", "Element;": "∈", "elinters;": "⏧", "ell;": "ℓ", "els;": "⪕", "elsdot;": "⪗", "Emacr;": "Ē", "emacr;": "ē", "empty;": "∅", "emptyset;": "∅", "EmptySmallSquare;": "◻", "emptyv;": "∅", "EmptyVerySmallSquare;": "▫", "emsp13;": " ", "emsp14;": " ", "emsp;": " ", "ENG;": "Ŋ", "eng;": "ŋ", "ensp;": " ", "Eogon;": "Ę", "eogon;": "ę", "Eopf;": "𝔼", "eopf;": "𝕖", "epar;": "⋕", "eparsl;": "⧣", "eplus;": "⩱", "epsi;": "ε", "Epsilon;": "Ε", "epsilon;": "ε", "epsiv;": "ϵ", "eqcirc;": "≖", "eqcolon;": "≕", "eqsim;": "≂", "eqslantgtr;": "⪖", "eqslantless;": "⪕", "Equal;": "⩵", "equals;": "=", "EqualTilde;": "≂", "equest;": "≟", "Equilibrium;": "⇌", "equiv;": "≡", "equivDD;": "⩸", "eqvparsl;": "⧥", "erarr;": "⥱", "erDot;": "≓", "Escr;": "ℰ", "escr;": "ℯ", "esdot;": "≐", "Esim;": "⩳", "esim;": "≂", "Eta;": "Η", "eta;": "η", "ETH": "Ð", "eth": "ð", "ETH;": "Ð", "eth;": "ð", "Euml": "Ë", "euml": "ë", "Euml;": "Ë", "euml;": "ë", "euro;": "€", "excl;": "!", "exist;": "∃", "Exists;": "∃", "expectation;": "ℰ", "ExponentialE;": "ⅇ", "exponentiale;": "ⅇ", "fallingdotseq;": "≒", "Fcy;": "Ф", "fcy;": "ф", "female;": "♀", "ffilig;": "ﬃ", "fflig;": "ﬀ", "ffllig;": "ﬄ", "Ffr;": "𝔉", "ffr;": "𝔣", "filig;": "ﬁ", "FilledSmallSquare;": "◼", "FilledVerySmallSquare;": "▪", "fjlig;": "fj", "flat;": "♭", "fllig;": "ﬂ", "fltns;": "▱", "fnof;": "ƒ", "Fopf;": "𝔽", "fopf;": "𝕗", "ForAll;": "∀", "forall;": "∀", "fork;": "⋔", "forkv;": "⫙", "Fouriertrf;": "ℱ", "fpartint;": "⨍", "frac12": "½", "frac12;": "½", "frac13;": "⅓", "frac14": "¼", "frac14;": "¼", "frac15;": "⅕", "frac16;": "⅙", "frac18;": "⅛", "frac23;": "⅔", "frac25;": "⅖", "frac34": "¾", "frac34;": "¾", "frac35;": "⅗", "frac38;": "⅜", "frac45;": "⅘", "frac56;": "⅚", "frac58;": "⅝", "frac78;": "⅞", "frasl;": "⁄", "frown;": "⌢", "Fscr;": "ℱ", "fscr;": "𝒻", "gacute;": "ǵ", "Gamma;": "Γ", "gamma;": "γ", "Gammad;": "Ϝ", "gammad;": "ϝ", "gap;": "⪆", "Gbreve;": "Ğ", "gbreve;": "ğ", "Gcedil;": "Ģ", "Gcirc;": "Ĝ", "gcirc;": "ĝ", "Gcy;": "Г", "gcy;": "г", "Gdot;": "Ġ", "gdot;": "ġ", "gE;": "≧", "ge;": "≥", "gEl;": "⪌", "gel;": "⋛", "geq;": "≥", "geqq;": "≧", "geqslant;": "⩾", "ges;": "⩾", "gescc;": "⪩", "gesdot;": "⪀", "gesdoto;": "⪂", "gesdotol;": "⪄", "gesl;": "⋛︀", "gesles;": "⪔", "Gfr;": "𝔊", "gfr;": "𝔤", "Gg;": "⋙", "gg;": "≫", "ggg;": "⋙", "gimel;": "ℷ", "GJcy;": "Ѓ", "gjcy;": "ѓ", "gl;": "≷", "gla;": "⪥", "glE;": "⪒", "glj;": "⪤", "gnap;": "⪊", "gnapprox;": "⪊", "gnE;": "≩", "gne;": "⪈", "gneq;": "⪈", "gneqq;": "≩", "gnsim;": "⋧", "Gopf;": "𝔾", "gopf;": "𝕘", "grave;": "`", "GreaterEqual;": "≥", "GreaterEqualLess;": "⋛", "GreaterFullEqual;": "≧", "GreaterGreater;": "⪢", "GreaterLess;": "≷", "GreaterSlantEqual;": "⩾", "GreaterTilde;": "≳", "Gscr;": "𝒢", "gscr;": "ℊ", "gsim;": "≳", "gsime;": "⪎", "gsiml;": "⪐", "GT": "\u003e", "gt": "\u003e", "GT;": "\u003e", "Gt;": "≫", "gt;": "\u003e", "gtcc;": "⪧", "gtcir;": "⩺", "gtdot;": "⋗", "gtlPar;": "⦕", "gtquest;": "⩼", "gtrapprox;": "⪆", "gtrarr;": "⥸", "gtrdot;": "⋗", "gtreqless;": "⋛", "gtreqqless;": "⪌", "gtrless;": "≷", "gtrsim;": "≳", "gvertneqq;": "≩︀", "gvnE;": "≩︀", "Hacek;": "ˇ", "hairsp;": " ", "half;": "½", "hamilt;": "ℋ", "HARDcy;": "Ъ", "hardcy;": "ъ", "hArr;": "⇔", "harr;": "↔", "harrcir;": "⥈", "harrw;": "↭", "Hat;": "^", "hbar;": "ℏ", "Hcirc;": "Ĥ", "hcirc;": "ĥ", "hearts;": "♥", "heartsuit;": "♥", "hellip;": "…", "hercon;": "⊹", "Hfr;": "ℌ", "hfr;": "𝔥", "HilbertSpace;": "ℋ", "hksearow;": "⤥", "hkswarow;": "⤦", "hoarr;": "⇿", "homtht;": "∻", "hookleftarrow;": "↩", "hookrightarrow;": "↪", "Hopf;": "ℍ", "hopf;": "𝕙", "horbar;": "―", "HorizontalLine;": "─", "Hscr;": "ℋ", "hscr;": "𝒽", "hslash;": "ℏ", "Hstrok;": "Ħ", "hstrok;": "ħ", "HumpDownHump;": "≎", "HumpEqual;": "≏", "hybull;": "⁃", "hyphen;": "‐", "Iacute": "Í", "iacute": "í", "Iacute;": "Í", "iacute;": "í", "ic;": "⁣", "Icirc": "Î", "icirc": "î", "Icirc;": "Î", "icirc;": "î", "Icy;": "И", "icy;": "и", "Idot;": "İ", "IEcy;": "Е", "iecy;": "е", "iexcl": "¡", "iexcl;": "¡", "iff;": "⇔", "Ifr;": "ℑ", "ifr;": "𝔦", "Igrave": "Ì", "igrave": "ì", "Igrave;": "Ì", "igrave;": "ì", "ii;": "ⅈ", "iiiint;": "⨌", "iiint;": "∭", "iinfin;": "⧜", "iiota;": "℩", "IJlig;": "Ĳ", "ijlig;": "ĳ", "Im;": "ℑ", "Imacr;": "Ī", "imacr;": "ī", "image;": "ℑ", "ImaginaryI;": "ⅈ", "imagline;": "ℐ", "imagpart;": "ℑ", "imath;": "ı", "imof;": "⊷", "imped;": "Ƶ", "Implies;": "⇒", "in;": "∈", "incare;": "℅", "infin;": "∞", "infintie;": "⧝", "inodot;": "ı", "Int;": "∬", "int;": "∫", "intcal;": "⊺", "integers;": "ℤ", "Integral;": "∫", "intercal;": "⊺", "Intersection;": "⋂", "intlarhk;": "⨗", "intprod;": "⨼", "InvisibleComma;": "⁣", "InvisibleTimes;": "⁢", "IOcy;": "Ё", "iocy;": "ё", "Iogon;": "Į", "iogon;": "į", "Iopf;": "𝕀", "iopf;": "𝕚", "Iota;": "Ι", "iota;": "ι", "iprod;": "⨼", "iquest": "¿", "iquest;": "¿", "Iscr;": "ℐ", "iscr;": "𝒾", "isin;": "∈", "isindot;": "⋵", "isinE;": "⋹", "isins;": "⋴", "isinsv;": "⋳", "isinv;": "∈", "it;": "⁢", "Itilde;": "Ĩ", "itilde;": "ĩ", "Iukcy;": "І", "iukcy;": "і", "Iuml": "Ï", "iuml": "ï", "Iuml;": "Ï", "iuml;": "ï", "Jcirc;": "Ĵ", "jcirc;": "ĵ", "Jcy;": "Й", "jcy;": "й", "Jfr;": "𝔍", "jfr;": "𝔧", "jmath;": "ȷ", "Jopf;": "𝕁", "jopf;": "𝕛", "Jscr;": "𝒥", "jscr;": "𝒿", "Jsercy;": "Ј", "jsercy;": "ј", "Jukcy;": "Є", "jukcy;": "є", "Kappa;": "Κ", "kappa;": "κ", "kappav;": "ϰ", "Kcedil;": "Ķ", "kcedil;": "ķ", "Kcy;": "К", "kcy;": "к", "Kfr;": "𝔎", "kfr;": "𝔨", "kgreen;": "ĸ", "KHcy;": "Х", "khcy;": "х", "KJcy;": "Ќ", "kjcy;": "ќ", "Kopf;": "𝕂", "kopf;": "𝕜", "Kscr;": "𝒦", "kscr;": "𝓀", "lAarr;": "⇚", "Lacute;": "Ĺ", "lacute;": "ĺ", "laemptyv;": "⦴", "lagran;": "ℒ", "Lambda;": "Λ", "lambda;": "λ", "Lang;": "⟪", "lang;": "⟨", "langd;": "⦑", "langle;": "⟨", "lap;": "⪅", "Laplacetrf;": "ℒ", "laquo": "«", "laquo;": "«", "Larr;": "↞", "lArr;": "⇐", "larr;": "←", "larrb;": "⇤", "larrbfs;": "⤟", "larrfs;": "⤝", "larrhk;": "↩", "larrlp;": "↫", "larrpl;": "⤹", "larrsim;": "⥳", "larrtl;": "↢", "lat;": "⪫", "lAtail;": "⤛", "latail;": "⤙", "late;": "⪭", "lates;": "⪭︀", "lBarr;": "⤎", "lbarr;": "⤌", "lbbrk;": "❲", "lbrace;": "{", "lbrack;": "[", "lbrke;": "⦋", "lbrksld;": "⦏", "lbrkslu;": "⦍", "Lcaron;": "Ľ", "lcaron;": "ľ", "Lcedil;": "Ļ", "lcedil;": "ļ", "lceil;": "⌈", "lcub;": "{", "Lcy;": "Л", "lcy;": "л", "ldca;": "⤶", "ldquo;": "“", "ldquor;": "„", "ldrdhar;": "⥧", "ldrushar;": "⥋", "ldsh;": "↲", "lE;": "≦", "le;": "≤", "LeftAngleBracket;": "⟨", "LeftArrow;": "←", "Leftarrow;": "⇐", "leftarrow;": "←", "LeftArrowBar;": "⇤", "LeftArrowRightArrow;": "⇆", "leftarrowtail;": "↢", "LeftCeiling;": "⌈", "LeftDoubleBracket;": "⟦", "LeftDownTeeVector;": "⥡", "LeftDownVector;": "⇃", "LeftDownVectorBar;": "⥙", "LeftFloor;": "⌊", "leftharpoondown;": "↽", "leftharpoonup;": "↼", "leftleftarrows;": "⇇", "LeftRightArrow;": "↔", "Leftrightarrow;": "⇔", "leftrightarrow;": "↔", "leftrightarrows;": "⇆", "leftrightharpoons;": "⇋", "leftrightsquigarrow;": "↭", "LeftRightVector;": "⥎", "LeftTee;": "⊣", "LeftTeeArrow;": "↤", "LeftTeeVector;": "⥚", "leftthreetimes;": "⋋", "LeftTriangle;": "⊲", "LeftTriangleBar;": "⧏", "LeftTriangleEqual;": "⊴", "LeftUpDownVector;": "⥑", "LeftUpTeeVector;": "⥠", "LeftUpVector;": "↿", "LeftUpVectorBar;": "⥘", "LeftVector;": "↼", "LeftVectorBar;": "⥒", "lEg;": "⪋", "leg;": "⋚", "leq;": "≤", "leqq;": "≦", "leqslant;": "⩽", "les;": "⩽", "lescc;": "⪨", "lesdot;": "⩿", "lesdoto;": "⪁", "lesdotor;": "⪃", "lesg;": "⋚︀", "lesges;": "⪓", "lessapprox;": "⪅", "lessdot;": "⋖", "lesseqgtr;": "⋚", "lesseqqgtr;": "⪋", "LessEqualGreater;": "⋚", "LessFullEqual;": "≦", "LessGreater;": "≶", "lessgtr;": "≶", "LessLess;": "⪡", "lesssim;": "≲", "LessSlantEqual;": "⩽", "LessTilde;": "≲", "lfisht;": "⥼", "lfloor;": "⌊", "Lfr;": "𝔏", "lfr;": "𝔩", "lg;": "≶", "lgE;": "⪑", "lHar;": "⥢", "lhard;": "↽", "lharu;": "↼", "lharul;": "⥪", "lhblk;": "▄", "LJcy;": "Љ", "ljcy;": "љ", "Ll;": "⋘", "ll;": "≪", "llarr;": "⇇", "llcorner;": "⌞", "Lleftarrow;": "⇚", "llhard;": "⥫", "lltri;": "◺", "Lmidot;": "Ŀ", "lmidot;": "ŀ", "lmoust;": "⎰", "lmoustache;": "⎰", "lnap;": "⪉", "lnapprox;": "⪉", "lnE;": "≨", "lne;": "⪇", "lneq;": "⪇", "lneqq;": "≨", "lnsim;": "⋦", "loang;": "⟬", "loarr;": "⇽", "lobrk;": "⟦", "LongLeftArrow;": "⟵", "Longleftarrow;": "⟸", "longleftarrow;": "⟵", "LongLeftRightArrow;": "⟷", "Longleftrightarrow;": "⟺", "longleftrightarrow;": "⟷", "longmapsto;": "⟼", "LongRightArrow;": "⟶", "Longrightarrow;": "⟹", "longrightarrow;": "⟶", "looparrowleft;": "↫", "looparrowright;": "↬", "lopar;": "⦅", "Lopf;": "𝕃", "lopf;": "𝕝", "loplus;": "⨭", "lotimes;": "⨴", "lowast;": "∗", "lowbar;": "_", "LowerLeftArrow;": "↙", "LowerRightArrow;": "↘", "loz;": "◊", "lozenge;": "◊", "lozf;": "⧫", "lpar;": "(", "lparlt;": "⦓", "lrarr;": "⇆", "lrcorner;": "⌟", "lrhar;": "⇋", "lrhard;": "⥭", "lrm;": "‎", "lrtri;": "⊿", "lsaquo;": "‹", "Lscr;": "ℒ", "lscr;": "𝓁", "Lsh;": "↰", "lsh;": "↰", "lsim;": "≲", "lsime;": "⪍", "lsimg;": "⪏", "lsqb;": "[", "lsquo;": "‘", "lsquor;": "‚", "Lstrok;": "Ł", "lstrok;": "ł", "LT": "\u003c", "lt": "\u003c", "LT;": "\u003c", "Lt;": "≪", "lt;": "\u003c", "ltcc;": "⪦", "ltcir;": "⩹", "ltdot;": "⋖", "lthree;": "⋋", "ltimes;": "⋉", "ltlarr;": "⥶", "ltquest;": "⩻", "ltri;": "◃", "ltrie;": "⊴", "ltrif;": "◂", "ltrPar;": "⦖", "lurdshar;": "⥊", "luruhar;": "⥦", "lvertneqq;": "≨︀", "lvnE;": "≨︀", "macr": "¯", "macr;": "¯", "male;": "♂", "malt;": "✠", "maltese;": "✠", "Map;": "⤅", "map;": "↦", "mapsto;": "↦", "mapstodown;": "↧", "mapstoleft;": "↤", "mapstoup;": "↥", "marker;": "▮", "mcomma;": "⨩", "Mcy;": "М", "mcy;": "м", "mdash;": "—", "mDDot;": "∺", "measuredangle;": "∡", "MediumSpace;": " ", "Mellintrf;": "ℳ", "Mfr;": "𝔐", "mfr;": "𝔪", "mho;": "℧", "micro": "µ", "micro;": "µ", "mid;": "∣", "midast;": "*", "midcir;": "⫰", "middot": "·", "middot;": "·", "minus;": "−", "minusb;": "⊟", "minusd;": "∸", "minusdu;": "⨪", "MinusPlus;": "∓", "mlcp;": "⫛", "mldr;": "…", "mnplus;": "∓", "models;": "⊧", "Mopf;": "𝕄", "mopf;": "𝕞", "mp;": "∓", "Mscr;": "ℳ", "mscr;": "𝓂", "mstpos;": "∾", "Mu;": "Μ", "mu;": "μ", "multimap;": "⊸", "mumap;": "⊸", "nabla;": "∇", "Nacute;": "Ń", "nacute;": "ń", "nang;": "∠⃒", "nap;": "≉", "napE;": "⩰̸", "napid;": "≋̸", "napos;": "ŉ", "napprox;": "≉", "natur;": "♮", "natural;": "♮", "naturals;": "ℕ", "nbsp": " ", "nbsp;": " ", "nbump;": "≎̸", "nbumpe;": "≏̸", "ncap;": "⩃", "Ncaron;": "Ň", "ncaron;": "ň", "Ncedil;": "Ņ", "ncedil;": "ņ", "ncong;": "≇", "ncongdot;": "⩭̸", "ncup;": "⩂", "Ncy;": "Н", "ncy;": "н", "ndash;": "–", "ne;": "≠", "nearhk;": "⤤", "neArr;": "⇗", "nearr;": "↗", "nearrow;": "↗", "nedot;": "≐̸", "NegativeMediumSpace;": "​", "NegativeThickSpace;": "​", "NegativeThinSpace;": "​", "NegativeVeryThinSpace;": "​", "nequiv;": "≢", "nesear;": "⤨", "nesim;": "≂̸", "NestedGreaterGreater;": "≫", "NestedLessLess;": "≪", "NewLine;": "\n", "nexist;": "∄", "nexists;": "∄", "Nfr;": "𝔑", "nfr;": "𝔫", "ngE;": "≧̸", "nge;": "≱", "ngeq;": "≱", "ngeqq;": "≧̸", "ngeqslant;": "⩾̸", "nges;": "⩾̸", "nGg;": "⋙̸", "ngsim;": "≵", "nGt;": "≫⃒", "ngt;": "≯", "ngtr;": "≯", "nGtv;": "≫̸", "nhArr;": "⇎", "nharr;": "↮", "nhpar;": "⫲", "ni;": "∋", "nis;": "⋼", "nisd;": "⋺", "niv;": "∋", "NJcy;": "Њ", "njcy;": "њ", "nlArr;": "⇍", "nlarr;": "↚", "nldr;": "‥", "nlE;": "≦̸", "nle;": "≰", "nLeftarrow;": "⇍", "nleftarrow;": "↚", "nLeftrightarrow;": "⇎", "nleftrightarrow;": "↮", "nleq;": "≰", "nleqq;": "≦̸", "nleqslant;": "⩽̸", "nles;": "⩽̸", "nless;": "≮", "nLl;": "⋘̸", "nlsim;": "≴", "nLt;": "≪⃒", "nlt;": "≮", "nltri;": "⋪", "nltrie;": "⋬", "nLtv;": "≪̸", "nmid;": "∤", "NoBreak;": "⁠", "NonBreakingSpace;": " ", "Nopf;": "ℕ", "nopf;": "𝕟", "not": "¬", "Not;": "⫬", "not;": "¬", "NotCongruent;": "≢", "NotCupCap;": "≭", "NotDoubleVerticalBar;": "∦", "NotElement;": "∉", "NotEqual;": "≠", "NotEqualTilde;": "≂̸", "NotExists;": "∄", "NotGreater;": "≯", "NotGreaterEqual;": "≱", "NotGreaterFullEqual;": "≧̸", "NotGreaterGreater;": "≫̸", "NotGreaterLess;": "≹", "NotGreaterSlantEqual;": "⩾̸", "NotGreaterTilde;": "≵", "NotHumpDownHump;": "≎̸", "NotHumpEqual;": "≏̸", "notin;": "∉", "notindot;": "⋵̸", "notinE;": "⋹̸", "notinva;": "∉", "notinvb;": "⋷", "notinvc;": "⋶", "NotLeftTriangle;": "⋪", "NotLeftTriangleBar;": "⧏̸", "NotLeftTriangleEqual;": "⋬", "NotLess;": "≮", "NotLessEqual;": "≰", "NotLessGreater;": "≸", "NotLessLess;": "≪̸", "NotLessSlantEqual;": "⩽̸", "NotLessTilde;": "≴", "NotNestedGreaterGreater;": "⪢̸", "NotNestedLessLess;": "⪡̸", "notni;": "∌", "notniva;": "∌", "notnivb;": "⋾", "notnivc;": "⋽", "NotPrecedes;": "⊀", "NotPrecedesEqual;": "⪯̸", "NotPrecedesSlantEqual;": "⋠", "NotReverseElement;": "∌", "NotRightTriangle;": "⋫", "NotRightTriangleBar;": "⧐̸", "NotRightTriangleEqual;": "⋭", "NotSquareSubset;": "⊏̸", "NotSquareSubsetEqual;": "⋢", "NotSquareSuperset;": "⊐̸", "NotSquareSupersetEqual;": "⋣", "NotSubset;": "⊂⃒", "NotSubsetEqual;": "⊈", "NotSucceeds;": "⊁", "NotSucceedsEqual;": "⪰̸", "NotSucceedsSlantEqual;": "⋡", "NotSucceedsTilde;": "≿̸", "NotSuperset;": "⊃⃒", "NotSupersetEqual;": "⊉", "NotTilde;": "≁", "NotTildeEqual;": "≄", "NotTildeFullEqual;": "≇", "NotTildeTilde;": "≉", "NotVerticalBar;": "∤", "npar;": "∦", "nparallel;": "∦", "nparsl;": "⫽⃥", "npart;": "∂̸", "npolint;": "⨔", "npr;": "⊀", "nprcue;": "⋠", "npre;": "⪯̸", "nprec;": "⊀", "npreceq;": "⪯̸", "nrArr;": "⇏", "nrarr;": "↛", "nrarrc;": "⤳̸", "nrarrw;": "↝̸", "nRightarrow;": "⇏", "nrightarrow;": "↛", "nrtri;": "⋫", "nrtrie;": "⋭", "nsc;": "⊁", "nsccue;": "⋡", "nsce;": "⪰̸", "Nscr;": "𝒩", "nscr;": "𝓃", "nshortmid;": "∤", "nshortparallel;": "∦", "nsim;": "≁", "nsime;": "≄", "nsimeq;": "≄", "nsmid;": "∤", "nspar;": "∦", "nsqsube;": "⋢", "nsqsupe;": "⋣", "nsub;": "⊄", "nsubE;": "⫅̸", "nsube;": "⊈", "nsubset;": "⊂⃒", "nsubseteq;": "⊈", "nsubseteqq;": "⫅̸", "nsucc;": "⊁", "nsucceq;": "⪰̸", "nsup;": "⊅", "nsupE;": "⫆̸", "nsupe;": "⊉", "nsupset;": "⊃⃒", "nsupseteq;": "⊉", "nsupseteqq;": "⫆̸", "ntgl;": "≹", "Ntilde": "Ñ", "ntilde": "ñ", "Ntilde;": "Ñ", "ntilde;": "ñ", "ntlg;": "≸", "ntriangleleft;": "⋪", "ntrianglelefteq;": "⋬", "ntriangleright;": "⋫", "ntrianglerighteq;": "⋭", "Nu;": "Ν", "nu;": "ν", "num;": "#", "numero;": "№", "numsp;": " ", "nvap;": "≍⃒", "nVDash;": "⊯", "nVdash;": "⊮", "nvDash;": "⊭", "nvdash;": "⊬", "nvge;": "≥⃒", "nvgt;": "\u003e⃒", "nvHarr;": "⤄", "nvinfin;": "⧞", "nvlArr;": "⤂", "nvle;": "≤⃒", "nvlt;": "\u003c⃒", "nvltrie;": "⊴⃒", "nvrArr;": "⤃", "nvrtrie;": "⊵⃒", "nvsim;": "∼⃒", "nwarhk;": "⤣", "nwArr;": "⇖", "nwarr;": "↖", "nwarrow;": "↖", "nwnear;": "⤧", "Oacute": "Ó", "oacute": "ó", "Oacute;": "Ó", "oacute;": "ó", "oast;": "⊛", "ocir;": "⊚", "Ocirc": "Ô", "ocirc": "ô", "Ocirc;": "Ô", "ocirc;": "ô", "Ocy;": "О", "ocy;": "о", "odash;": "⊝", "Odblac;": "Ő", "odblac;": "ő", "odiv;": "⨸", "odot;": "⊙", "odsold;": "⦼", "OElig;": "Œ", "oelig;": "œ", "ofcir;": "⦿", "Ofr;": "𝔒", "ofr;": "𝔬", "ogon;": "˛", "Ograve": "Ò", "ograve": "ò", "Ograve;": "Ò", "ograve;": "ò", "ogt;": "⧁", "ohbar;": "⦵", "ohm;": "Ω", "oint;": "∮", "olarr;": "↺", "olcir;": "⦾", "olcross;": "⦻", "oline;": "‾", "olt;": "⧀", "Omacr;": "Ō", "omacr;": "ō", "Omega;": "Ω", "omega;": "ω", "Omicron;": "Ο", "omicron;": "ο", "omid;": "⦶", "ominus;": "⊖", "Oopf;": "𝕆", "oopf;": "𝕠", "opar;": "⦷", "OpenCurlyDoubleQuote;": "“", "OpenCurlyQuote;": "‘", "operp;": "⦹", "oplus;": "⊕", "Or;": "⩔", "or;": "∨", "orarr;": "↻", "ord;": "⩝", "order;": "ℴ", "orderof;": "ℴ", "ordf": "ª", "ordf;": "ª", "ordm": "º", "ordm;": "º", "origof;": "⊶", "oror;": "⩖", "orslope;": "⩗", "orv;": "⩛", "oS;": "Ⓢ", "Oscr;": "𝒪", "oscr;": "ℴ", "Oslash": "Ø", "oslash": "ø", "Oslash;": "Ø", "oslash;": "ø", "osol;": "⊘", "Otilde": "Õ", "otilde": "õ", "Otilde;": "Õ", "otilde;": "õ", "Otimes;": "⨷", "otimes;": "⊗", "otimesas;": "⨶", "Ouml": "Ö", "ouml": "ö", "Ouml;": "Ö", "ouml;": "ö", "ovbar;": "⌽", "OverBar;": "‾", "OverBrace;": "⏞", "OverBracket;": "⎴", "OverParenthesis;": "⏜", "par;": "∥", "para": "¶", "para;": "¶", "parallel;": "∥", "parsim;": "⫳", "parsl;": "⫽", "part;": "∂", "PartialD;": "∂", "Pcy;": "П", "pcy;": "п", "percnt;": "%", "period;": ".", "permil;": "‰", "perp;": "⊥", "pertenk;": "‱", "Pfr;": "𝔓", "pfr;": "𝔭", "Phi;": "Φ", "phi;": "φ", "phiv;": "ϕ", "phmmat;": "ℳ", "phone;": "☎", "Pi;": "Π", "pi;": "π", "pitchfork;": "⋔", "piv;": "ϖ", "planck;": "ℏ", "planckh;": "ℎ", "plankv;": "ℏ", "plus;": "+", "plusacir;": "⨣", "plusb;": "⊞", "pluscir;": "⨢", "plusdo;": "∔", "plusdu;": "⨥", "pluse;": "⩲", "PlusMinus;": "±", "plusmn": "±", "plusmn;": "±", "plussim;": "⨦", "plustwo;": "⨧", "pm;": "±", "Poincareplane;": "ℌ", "pointint;": "⨕", "Popf;": "ℙ", "popf;": "𝕡", "pound": "£", "pound;": "£", "Pr;": "⪻", "pr;": "≺", "prap;": "⪷", "prcue;": "≼", "prE;": "⪳", "pre;": "⪯", "prec;": "≺", "precapprox;": "⪷", "preccurlyeq;": "≼", "Precedes;": "≺", "PrecedesEqual;": "⪯", "PrecedesSlantEqual;": "≼", "PrecedesTilde;": "≾", "preceq;": "⪯", "precnapprox;": "⪹", "precneqq;": "⪵", "precnsim;": "⋨", "precsim;": "≾", "Prime;": "″", "prime;": "′", "primes;": "ℙ", "prnap;": "⪹", "prnE;": "⪵", "prnsim;": "⋨", "prod;": "∏", "Product;": "∏", "profalar;": "⌮", "profline;": "⌒", "profsurf;": "⌓", "prop;": "∝", "Proportion;": "∷", "Proportional;": "∝", "propto;": "∝", "prsim;": "≾", "prurel;": "⊰", "Pscr;": "𝒫", "pscr;": "𝓅", "Psi;": "Ψ", "psi;": "ψ", "puncsp;": " ", "Qfr;": "𝔔", "qfr;": "𝔮", "qint;": "⨌", "Qopf;": "ℚ", "qopf;": "𝕢", "qprime;": "⁗", "Qscr;": "𝒬", "qscr;": "𝓆", "quaternions;": "ℍ", "quatint;": "⨖", "quest;": "?", "questeq;": "≟", "QUOT": "\"", "quot": "\"", "QUOT;": "\"", "quot;": "\"", "rAarr;": "⇛", "race;": "∽̱", "Racute;": "Ŕ", "racute;": "ŕ", "radic;": "√", "raemptyv;": "⦳", "Rang;": "⟫", "rang;": "⟩", "rangd;": "⦒", "range;": "⦥", "rangle;": "⟩", "raquo": "»", "raquo;": "»", "Rarr;": "↠", "rArr;": "⇒", "rarr;": "→", "rarrap;": "⥵", "rarrb;": "⇥", "rarrbfs;": "⤠", "rarrc;": "⤳", "rarrfs;": "⤞", "rarrhk;": "↪", "rarrlp;": "↬", "rarrpl;": "⥅", "rarrsim;": "⥴", "Rarrtl;": "⤖", "rarrtl;": "↣", "rarrw;": "↝", "rAtail;": "⤜", "ratail;": "⤚", "ratio;": "∶", "rationals;": "ℚ", "RBarr;": "⤐", "rBarr;": "⤏", "rbarr;": "⤍", "rbbrk;": "❳", "rbrace;": "}", "rbrack;": "]", "rbrke;": "⦌", "rbrksld;": "⦎", "rbrkslu;": "⦐", "Rcaron;": "Ř", "rcaron;": "ř", "Rcedil;": "Ŗ", "rcedil;": "ŗ", "rceil;": "⌉", "rcub;": "}", "Rcy;": "Р", "rcy;": "р", "rdca;": "⤷", "rdldhar;": "⥩", "rdquo;": "”", "rdquor;": "”", "rdsh;": "↳", "Re;": "ℜ", "real;": "ℜ", "realine;": "ℛ", "realpart;": "ℜ", "reals;": "ℝ", "rect;": "▭", "REG": "®", "reg": "®", "REG;": "®", "reg;": "®", "ReverseElement;": "∋", "ReverseEquilibrium;": "⇋", "ReverseUpEquilibrium;": "⥯", "rfisht;": "⥽", "rfloor;": "⌋", "Rfr;": "ℜ", "rfr;": "𝔯", "rHar;": "⥤", "rhard;": "⇁", "rharu;": "⇀", "rharul;": "⥬", "Rho;": "Ρ", "rho;": "ρ", "rhov;": "ϱ", "RightAngleBracket;": "⟩", "RightArrow;": "→", "Rightarrow;": "⇒", "rightarrow;": "→", "RightArrowBar;": "⇥", "RightArrowLeftArrow;": "⇄", "rightarrowtail;": "↣", "RightCeiling;": "⌉", "RightDoubleBracket;": "⟧", "RightDownTeeVector;": "⥝", "RightDownVector;": "⇂", "RightDownVectorBar;": "⥕", "RightFloor;": "⌋", "rightharpoondown;": "⇁", "rightharpoonup;": "⇀", "rightleftarrows;": "⇄", "rightleftharpoons;": "⇌", "rightrightarrows;": "⇉", "rightsquigarrow;": "↝", "RightTee;": "⊢", "RightTeeArrow;": "↦", "RightTeeVector;": "⥛", "rightthreetimes;": "⋌", "RightTriangle;": "⊳", "RightTriangleBar;": "⧐", "RightTriangleEqual;": "⊵", "RightUpDownVector;": "⥏", "RightUpTeeVector;": "⥜", "RightUpVector;": "↾", "RightUpVectorBar;": "⥔", "RightVector;": "⇀", "RightVectorBar;": "⥓", "ring;": "˚", "risingdotseq;": "≓", "rlarr;": "⇄", "rlhar;": "⇌", "rlm;": "‏", "rmoust;": "⎱", "rmoustache;": "⎱", "rnmid;": "⫮", "roang;": "⟭", "roarr;": "⇾", "robrk;": "⟧", "ropar;": "⦆", "Ropf;": "ℝ", "ropf;": "𝕣", "roplus;": "⨮", "rotimes;": "⨵", "RoundImplies;": "⥰", "rpar;": ")", "rpargt;": "⦔", "rppolint;": "⨒", "rrarr;": "⇉", "Rrightarrow;": "⇛", "rsaquo;": "›", "Rscr;": "ℛ", "rscr;": "𝓇", "Rsh;": "↱", "rsh;": "↱", "rsqb;": "]", "rsquo;": "’", "rsquor;": "’", "rthree;": "⋌", "rtimes;": "⋊", "rtri;": "▹", "rtrie;": "⊵", "rtrif;": "▸", "rtriltri;": "⧎", "RuleDelayed;": "⧴", "ruluhar;": "⥨", "rx;": "℞", "Sacute;": "Ś", "sacute;": "ś", "sbquo;": "‚", "Sc;": "⪼", "sc;": "≻", "scap;": "⪸", "Scaron;": "Š", "scaron;": "š", "sccue;": "≽", "scE;": "⪴", "sce;": "⪰", "Scedil;": "Ş", "scedil;": "ş", "Scirc;": "Ŝ", "scirc;": "ŝ", "scnap;": "⪺", "scnE;": "⪶", "scnsim;": "⋩", "scpolint;": "⨓", "scsim;": "≿", "Scy;": "С", "scy;": "с", "sdot;": "⋅", "sdotb;": "⊡", "sdote;": "⩦", "searhk;": "⤥", "seArr;": "⇘", "searr;": "↘", "searrow;": "↘", "sect": "§", "sect;": "§", "semi;": ";", "seswar;": "⤩", "setminus;": "∖", "setmn;": "∖", "sext;": "✶", "Sfr;": "𝔖", "sfr;": "𝔰", "sfrown;": "⌢", "sharp;": "♯", "SHCHcy;": "Щ", "shchcy;": "щ", "SHcy;": "Ш", "shcy;": "ш", "ShortDownArrow;": "↓", "ShortLeftArrow;": "←", "shortmid;": "∣", "shortparallel;": "∥", "ShortRightArrow;": "→", "ShortUpArrow;": "↑", "shy": "­", "shy;": "­", "Sigma;": "Σ", "sigma;": "σ", "sigmaf;": "ς", "sigmav;": "ς", "sim;": "∼", "simdot;": "⩪", "sime;": "≃", "simeq;": "≃", "simg;": "⪞", "simgE;": "⪠", "siml;": "⪝", "simlE;": "⪟", "simne;": "≆", "simplus;": "⨤", "simrarr;": "⥲", "slarr;": "←", "SmallCircle;": "∘", "smallsetminus;": "∖", "smashp;": "⨳", "smeparsl;": "⧤", "smid;": "∣", "smile;": "⌣", "smt;": "⪪", "smte;": "⪬", "smtes;": "⪬︀", "SOFTcy;": "Ь", "softcy;": "ь", "sol;": "/", "solb;": "⧄", "solbar;": "⌿", "Sopf;": "𝕊", "sopf;": "𝕤", "spades;": "♠", "spadesuit;": "♠", "spar;": "∥", "sqcap;": "⊓", "sqcaps;": "⊓︀", "sqcup;": "⊔", "sqcups;": "⊔︀", "Sqrt;": "√", "sqsub;": "⊏", "sqsube;": "⊑", "sqsubset;": "⊏", "sqsubseteq;": "⊑", "sqsup;": "⊐", "sqsupe;": "⊒", "sqsupset;": "⊐", "sqsupseteq;": "⊒", "squ;": "□", "Square;": "□", "square;": "□", "SquareIntersection;": "⊓", "SquareSubset;": "⊏", "SquareSubsetEqual;": "⊑", "SquareSuperset;": "⊐", "SquareSupersetEqual;": "⊒", "SquareUnion;": "⊔", "squarf;": "▪", "squf;": "▪", "srarr;": "→", "Sscr;": "𝒮", "sscr;": "𝓈", "ssetmn;": "∖", "ssmile;": "⌣", "sstarf;": "⋆", "Star;": "⋆", "star;": "☆", "starf;": "★", "straightepsilon;": "ϵ", "straightphi;": "ϕ", "strns;": "¯", "Sub;": "⋐", "sub;": "⊂", "subdot;": "⪽", "subE;": "⫅", "sube;": "⊆", "subedot;": "⫃", "submult;": "⫁", "subnE;": "⫋", "subne;": "⊊", "subplus;": "⪿", "subrarr;": "⥹", "Subset;": "⋐", "subset;": "⊂", "subseteq;": "⊆", "subseteqq;": "⫅", "SubsetEqual;": "⊆", "subsetneq;": "⊊", "subsetneqq;": "⫋", "subsim;": "⫇", "subsub;": "⫕", "subsup;": "⫓", "succ;": "≻", "succapprox;": "⪸", "succcurlyeq;": "≽", "Succeeds;": "≻", "SucceedsEqual;": "⪰", "SucceedsSlantEqual;": "≽", "SucceedsTilde;": "≿", "succeq;": "⪰", "succnapprox;": "⪺", "succneqq;": "⪶", "succnsim;": "⋩", "succsim;": "≿", "SuchThat;": "∋", "Sum;": "∑", "sum;": "∑", "sung;": "♪", "sup1": "¹", "sup1;": "¹", "sup2": "²", "sup2;": "²", "sup3": "³", "sup3;": "³", "Sup;": "⋑", "sup;": "⊃", "supdot;": "⪾", "supdsub;": "⫘", "supE;": "⫆", "supe;": "⊇", "supedot;": "⫄", "Superset;": "⊃", "SupersetEqual;": "⊇", "suphsol;": "⟉", "suphsub;": "⫗", "suplarr;": "⥻", "supmult;": "⫂", "supnE;": "⫌", "supne;": "⊋", "supplus;": "⫀", "Supset;": "⋑", "supset;": "⊃", "supseteq;": "⊇", "supseteqq;": "⫆", "supsetneq;": "⊋", "supsetneqq;": "⫌", "supsim;": "⫈", "supsub;": "⫔", "supsup;": "⫖", "swarhk;": "⤦", "swArr;": "⇙", "swarr;": "↙", "swarrow;": "↙", "swnwar;": "⤪", "szlig": "ß", "szlig;": "ß", "Tab;": "\t", "target;": "⌖", "Tau;": "Τ", "tau;": "τ", "tbrk;": "⎴", "Tcaron;": "Ť", "tcaron;": "ť", "Tcedil;": "Ţ", "tcedil;": "ţ", "Tcy;": "Т", "tcy;": "т", "tdot;": "⃛", "telrec;": "⌕", "Tfr;": "𝔗", "tfr;": "𝔱", "there4;": "∴", "Therefore;": "∴", "therefore;": "∴", "Theta;": "Θ", "theta;": "θ", "thetasym;": "ϑ", "thetav;": "ϑ", "thickapprox;": "≈", "thicksim;": "∼", "ThickSpace;": "  ", "thinsp;": " ", "ThinSpace;": " ", "thkap;": "≈", "thksim;": "∼", "THORN": "Þ", "thorn": "þ", "THORN;": "Þ", "thorn;": "þ", "Tilde;": "∼", "tilde;": "˜", "TildeEqual;": "≃", "TildeFullEqual;": "≅", "TildeTilde;": "≈", "times": "×", "times;": "×", "timesb;": "⊠", "timesbar;": "⨱", "timesd;": "⨰", "tint;": "∭", "toea;": "⤨", "top;": "⊤", "topbot;": "⌶", "topcir;": "⫱", "Topf;": "𝕋", "topf;": "𝕥", "topfork;": "⫚", "tosa;": "⤩", "tprime;": "‴", "TRADE;": "™", "trade;": "™", "triangle;": "▵", "triangledown;": "▿", "triangleleft;": "◃", "trianglelefteq;": "⊴", "triangleq;": "≜", "triangleright;": "▹", "trianglerighteq;": "⊵", "tridot;": "◬", "trie;": "≜", "triminus;": "⨺", "TripleDot;": "⃛", "triplus;": "⨹", "trisb;": "⧍", "tritime;": "⨻", "trpezium;": "⏢", "Tscr;": "𝒯", "tscr;": "𝓉", "TScy;": "Ц", "tscy;": "ц", "TSHcy;": "Ћ", "tshcy;": "ћ", "Tstrok;": "Ŧ", "tstrok;": "ŧ", "twixt;": "≬", "twoheadleftarrow;": "↞", "twoheadrightarrow;": "↠", "Uacute": "Ú", "uacute": "ú", "Uacute;": "Ú", "uacute;": "ú", "Uarr;": "↟", "uArr;": "⇑", "uarr;": "↑", "Uarrocir;": "⥉", "Ubrcy;": "Ў", "ubrcy;": "ў", "Ubreve;": "Ŭ", "ubreve;": "ŭ", "Ucirc": "Û", "ucirc": "û", "Ucirc;": "Û", "ucirc;": "û", "Ucy;": "У", "ucy;": "у", "udarr;": "⇅", "Udblac;": "Ű", "udblac;": "ű", "udhar;": "⥮", "ufisht;": "⥾", "Ufr;": "𝔘", "ufr;": "𝔲", "Ugrave": "Ù", "ugrave": "ù", "Ugrave;": "Ù", "ugrave;": "ù", "uHar;": "⥣", "uharl;": "↿", "uharr;": "↾", "uhblk;": "▀", "ulcorn;": "⌜", "ulcorner;": "⌜", "ulcrop;": "⌏", "ultri;": "◸", "Umacr;": "Ū", "umacr;": "ū", "uml": "¨", "uml;": "¨", "UnderBar;": "_", "UnderBrace;": "⏟", "UnderBracket;": "⎵", "UnderParenthesis;": "⏝", "Union;": "⋃", "UnionPlus;": "⊎", "Uogon;": "Ų", "uogon;": "ų", "Uopf;": "𝕌", "uopf;": "𝕦", "UpArrow;": "↑", "Uparrow;": "⇑", "uparrow;": "↑", "UpArrowBar;": "⤒", "UpArrowDownArrow;": "⇅", "UpDownArrow;": "↕", "Updownarrow;": "⇕", "updownarrow;": "↕", "UpEquilibrium;": "⥮", "upharpoonleft;": "↿", "upharpoonright;": "↾", "uplus;": "⊎", "UpperLeftArrow;": "↖", "UpperRightArrow;": "↗", "Upsi;": "ϒ", "upsi;": "υ", "upsih;": "ϒ", "Upsilon;": "Υ", "upsilon;": "υ", "UpTee;": "⊥", "UpTeeArrow;": "↥", "upuparrows;": "⇈", "urcorn;": "⌝", "urcorner;": "⌝", "urcrop;": "⌎", "Uring;": "Ů", "uring;": "ů", "urtri;": "◹", "Uscr;": "𝒰", "uscr;": "𝓊", "utdot;": "⋰", "Utilde;": "Ũ", "utilde;": "ũ", "utri;": "▵", "utrif;": "▴", "uuarr;": "⇈", "Uuml": "Ü", "uuml": "ü", "Uuml;": "Ü", "uuml;": "ü", "uwangle;": "⦧", "vangrt;": "⦜", "varepsilon;": "ϵ", "varkappa;": "ϰ", "varnothing;": "∅", "varphi;": "ϕ", "varpi;": "ϖ", "varpropto;": "∝", "vArr;": "⇕", "varr;": "↕", "varrho;": "ϱ", "varsigma;": "ς", "varsubsetneq;": "⊊︀", "varsubsetneqq;": "⫋︀", "varsupsetneq;": "⊋︀", "varsupsetneqq;": "⫌︀", "vartheta;": "ϑ", "vartriangleleft;": "⊲", "vartriangleright;": "⊳", "Vbar;": "⫫", "vBar;": "⫨", "vBarv;": "⫩", "Vcy;": "В", "vcy;": "в", "VDash;": "⊫", "Vdash;": "⊩", "vDash;": "⊨", "vdash;": "⊢", "Vdashl;": "⫦", "Vee;": "⋁", "vee;": "∨", "veebar;": "⊻", "veeeq;": "≚", "vellip;": "⋮", "Verbar;": "‖", "verbar;": "|", "Vert;": "‖", "vert;": "|", "VerticalBar;": "∣", "VerticalLine;": "|", "VerticalSeparator;": "❘", "VerticalTilde;": "≀", "VeryThinSpace;": " ", "Vfr;": "𝔙", "vfr;": "𝔳", "vltri;": "⊲", "vnsub;": "⊂⃒", "vnsup;": "⊃⃒", "Vopf;": "𝕍", "vopf;": "𝕧", "vprop;": "∝", "vrtri;": "⊳", "Vscr;": "𝒱", "vscr;": "𝓋", "vsubnE;": "⫋︀", "vsubne;": "⊊︀", "vsupnE;": "⫌︀", "vsupne;": "⊋︀", "Vvdash;": "⊪", "vzigzag;": "⦚", "Wcirc;": "Ŵ", "wcirc;": "ŵ", "wedbar;": "⩟", "Wedge;": "⋀", "wedge;": "∧", "wedgeq;": "≙", "weierp;": "℘", "Wfr;": "𝔚", "wfr;": "𝔴", "Wopf;": "𝕎", "wopf;": "𝕨", "wp;": "℘", "wr;": "≀", "wreath;": "≀", "Wscr;": "𝒲", "wscr;": "𝓌", "xcap;": "⋂", "xcirc;": "◯", "xcup;": "⋃", "xdtri;": "▽", "Xfr;": "𝔛", "xfr;": "𝔵", "xhArr;": "⟺", "xharr;": "⟷", "Xi;": "Ξ", "xi;": "ξ", "xlArr;": "⟸", "xlarr;": "⟵", "xmap;": "⟼", "xnis;": "⋻", "xodot;": "⨀", "Xopf;": "𝕏", "xopf;": "𝕩", "xoplus;": "⨁", "xotime;": "⨂", "xrArr;": "⟹", "xrarr;": "⟶", "Xscr;": "𝒳", "xscr;": "𝓍", "xsqcup;": "⨆", "xuplus;": "⨄", "xutri;": "△", "xvee;": "⋁", "xwedge;": "⋀", "Yacute": "Ý", "yacute": "ý", "Yacute;": "Ý", "yacute;": "ý", "YAcy;": "Я", "yacy;": "я", "Ycirc;": "Ŷ", "ycirc;": "ŷ", "Ycy;": "Ы", "ycy;": "ы", "yen": "¥", "yen;": "¥", "Yfr;": "𝔜", "yfr;": "𝔶", "YIcy;": "Ї", "yicy;": "ї", "Yopf;": "𝕐", "yopf;": "𝕪", "Yscr;": "𝒴", "yscr;": "𝓎", "YUcy;": "Ю", "yucy;": "ю", "yuml": "ÿ", "Yuml;": "Ÿ", "yuml;": "ÿ", "Zacute;": "Ź", "zacute;": "ź", "Zcaron;": "Ž", "zcaron;": "ž", "Zcy;": "З", "zcy;": "з", "Zdot;": "Ż", "zdot;": "ż", "zeetrf;": "ℨ", "ZeroWidthSpace;": "​", "Zeta;": "Ζ", "zeta;": "ζ", "Zfr;": "ℨ", "zfr;": "𝔷", "ZHcy;": "Ж", "zhcy;": "ж", "zigrarr;": "⇝", "Zopf;": "ℤ", "zopf;": "𝕫", "Zscr;": "𝒵", "zscr;": "𝓏", "zwj;": "‍", "zwnj;": "‌"};
+
+const DROP_GROUPS = {
+  combat: "Monster drops",
+  thieving: "Pickpocketing",
+  hunter: "Hunter",
+  sailing: "Sailing",
+  reward: "Chests, clues and other drops",
+};
+
+function htmlUnescape(text) {
+  return String(text).replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]+);/g, (full, body) => {
+    if (body[0] === "#") {
+      const hex = body[1] === "x" || body[1] === "X";
+      const cp = hex ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      if (!Number.isFinite(cp) || cp < 0 || cp > 0x10ffff) return full;
+      try { return String.fromCodePoint(cp); } catch (e) { return full; }
+    }
+    const ch = ENT[body + ";"];
+    return ch != null ? ch : full;
+  });
+}
+
+function pyQuote(str, safe) {
+  const always = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-~";
+  let out = "";
+  for (const ch of String(str)) {
+    if (always.includes(ch) || safe.includes(ch)) out += ch;
+    else {
+      const bytes = new TextEncoder().encode(ch);
+      for (const b of bytes) out += "%" + b.toString(16).toUpperCase().padStart(2, "0");
+    }
+  }
+  return out;
+}
+
+function wikiUrl(title, anchor) {
+  if (!title) return null;
+  const slug = String(title).replace(/ /g, "_");
+  let url = WIKI_PAGE + pyQuote(slug, "()_-'!:");
+  if (anchor) url += "#" + pyQuote(String(anchor).replace(/ /g, "_"), "/");
+  return url;
+}
+
+function imageUrl(fileTitle) {
+  if (!fileTitle) return null;
+  const name = String(fileTitle).replace(/^File:/i, "").trim();
+  if (!name) return null;
+  return "https://oldschool.runescape.wiki/images/" + pyQuote(name.replace(/ /g, "_"), "()_-'!");
+}
+
+function stripHtml(value) {
+  if (!value) return "";
+  let text = String(value).replace(/<[^>]+>/g, " ");
+  text = htmlUnescape(text);
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function splitArgs(inner) {
+  return String(inner).split("|").map((part) => part.trim());
+}
+
+function cleanWiki(text) {
+  if (!text) return "";
+  text = String(text).replace(/<!--[\s\S]*?-->/g, "");
+  let guard = 0;
+  while (text.includes("{{") && guard < 200) {
+    guard += 1;
+    const next = text.replace(/\{\{([^{}]*)\}\}/g, (_, inner) => {
+      const name = inner.split("|", 1)[0].trim().toLowerCase();
+      const parts = splitArgs(inner);
+      if ((name === "plink" || name === "plinkp" || name === "chatl" || name === "colour" || name === "color") && parts.length > 1) {
+        return parts[parts.length - 1];
+      }
+      return "";
+    });
+    if (next === text) break;
+    text = next;
+  }
+  text = text.replace(/\[\[(?:File|Image):[^\]]*\]\]/gi, "");
+  text = text.replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, "$2");
+  text = text.replace(/\[\[([^\]]+)\]\]/g, "$1");
+  text = text.replaceAll("'''", "").replaceAll("''", "");
+  text = text.replace(/<[^>]+>/g, " ");
+  text = htmlUnescape(text);
+  text = text.replaceAll("\u00a0", " ");
+  return text;
+}
+
+function balancedSplit(body, sep) {
+  if (sep == null) sep = "|";
+  const parts = [];
+  let buf = "";
+  let depthCurly = 0;
+  let depthSquare = 0;
+  let i = 0;
+  body = String(body);
+  while (i < body.length) {
+    if (body.startsWith("{{", i)) {
+      depthCurly += 1;
+      buf += "{{";
+      i += 2;
+      continue;
+    }
+    if (body.startsWith("}}", i)) {
+      depthCurly = Math.max(0, depthCurly - 1);
+      buf += "}}";
+      i += 2;
+      continue;
+    }
+    if (body.startsWith("[[", i)) {
+      depthSquare += 1;
+      buf += "[[";
+      i += 2;
+      continue;
+    }
+    if (body.startsWith("]]", i)) {
+      depthSquare = Math.max(0, depthSquare - 1);
+      buf += "]]";
+      i += 2;
+      continue;
+    }
+    if (body[i] === sep && depthCurly === 0 && depthSquare === 0) {
+      parts.push(buf.trim());
+      buf = "";
+      i += 1;
+      continue;
+    }
+    buf += body[i];
+    i += 1;
+  }
+  parts.push(buf.trim());
+  return parts;
+}
+
+function iterTemplates(text, name) {
+  const want = name ? name.toLowerCase() : null;
+  const found = [];
+  text = String(text || "");
+  let i = 0;
+  while (true) {
+    const start = text.indexOf("{{", i);
+    if (start < 0) return found;
+    let depth = 0;
+    let j = start;
+    let closed = false;
+    while (j < text.length - 1) {
+      if (text.startsWith("{{", j)) {
+        depth += 1;
+        j += 2;
+      } else if (text.startsWith("}}", j)) {
+        depth -= 1;
+        j += 2;
+        if (depth === 0) {
+          const inner = text.slice(start + 2, j - 2);
+          const head = inner.split("|")[0].trim().toLowerCase();
+          if (want === null || head === want) found.push([text.slice(start, j), inner]);
+          i = j;
+          closed = true;
+          break;
+        }
+      } else {
+        j += 1;
+      }
+    }
+    if (!closed) return found;
+  }
+}
+
+function removeTemplatesNamed(text, names) {
+  const wanted = new Set(names.map((n) => n.toLowerCase()));
+  let changed = true;
+  let guard = 0;
+  while (changed && guard < 50) {
+    guard += 1;
+    changed = false;
+    for (const pair of iterTemplates(text)) {
+      const head = pair[1].split("|")[0].trim().toLowerCase();
+      if (wanted.has(head)) {
+        text = text.replace(pair[0], "");
+        changed = true;
+        break;
+      }
+    }
+  }
+  return text;
+}
+
+function sectionBody(wikitext, heading) {
+  const matches = [...String(wikitext).matchAll(/^(=+)([^=\n]+)\1\s*$/gm)];
+  const target = heading.trim().toLowerCase();
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i];
+    if (match[1].length !== 2) continue;
+    if (match[2].trim().toLowerCase() !== target) continue;
+    let end = wikitext.length;
+    for (const nxt of matches.slice(i + 1)) {
+      if (nxt[1].length <= 2) {
+        end = nxt.index;
+        break;
+      }
+    }
+    return wikitext.slice(match.index + match[0].length, end);
+  }
+  return "";
+}
+
+function leadText(wikitext) {
+  const match = String(wikitext).match(/\n==[^=]/);
+  return match ? wikitext.slice(0, match.index) : wikitext;
+}
+
+function plainSentences(fragment) {
+  let text = cleanWiki(fragment);
+  text = text.replace(/^[|!=].*$/gm, " ");
+  text = text.replace(/\s+/g, " ").trim();
+  if (!text) return [];
+  return text.split(/(?<=[.!?])\s+/).map((bit) => bit.trim()).filter((bit) => bit.length > 40);
+}
+
+function acquisitionNotes(wikitext) {
+  const sentences = plainSentences(leadText(wikitext));
+  const kept = [];
+  const direct = /\b(given by|given to|for free|rewarded|awarded|received from)\b/i;
+  const questWord = /\bquest\b/i;
+  const obtainWord = /\b(given|obtained|purchased|bought|reward)\b/i;
+  const skip = /\b(required for|recommended|minimum|though|best-in-slot|defensive bonus|can be used|deadman)\b/i;
+  for (const sentence of sentences) {
+    const questSource = questWord.test(sentence) && obtainWord.test(sentence);
+    if (skip.test(sentence) || !(direct.test(sentence) || questSource)) continue;
+    kept.push(sentence);
+    if (kept.length >= 2) break;
+  }
+  return kept;
+}
+
+function parseRespawn(wikitext) {
+  const match = String(wikitext).match(/^\|\s*respawn\s*=\s*([^\n|]+)/m);
+  if (!match) return null;
+  const value = match[1].trim();
+  if (!value || value.toLowerCase() === "no" || value.toLowerCase() === "n/a") return null;
+  if (/^\d+$/.test(value)) return value + " ticks";
+  return value;
+}
+
+function formatLevels(raw) {
+  if (raw == null || raw === "") return null;
+  const parts = String(raw).split(",").map((part) => part.trim()).filter(Boolean);
+  const nums = [];
+  for (const part of parts) {
+    if (/^\d+$/.test(part)) nums.push(parseInt(part, 10));
+    else return stripHtml(String(raw)) || null;
+  }
+  if (!nums.length) return null;
+  const lo = Math.min.apply(null, nums);
+  const hi = Math.max.apply(null, nums);
+  if (lo === hi) return String(lo);
+  return lo + "\u2013" + hi;
+}
+
+function raritySortKey(rate) {
+  if (!rate) return null;
+  if (String(rate).trim().toLowerCase() === "always") return 1;
+  const match = String(rate).match(/(\d+(?:\.\d+)?)\s*\/\s*(\d[\d,]*(?:\.\d+)?)/);
+  if (!match) return null;
+  const num = parseFloat(match[1]);
+  const den = parseFloat(match[2].replace(/,/g, ""));
+  if (!(num > 0)) return null;
+  return den / num;
+}
+
+function pyInt(value) {
+  if (typeof value === "boolean") return value ? 1 : 0;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new Error("bad int");
+    return Math.trunc(value);
+  }
+  const s = String(value).trim();
+  if (!/^[+-]?\d+$/.test(s)) throw new Error("bad int");
+  return parseInt(s, 10);
+}
+
+function formatRate(data) {
+  const rarity = stripHtml(String(data.Rarity || ""));
+  if (!rarity) return [null, true];
+  const approx = !!data.Approx;
+  let shown = approx && !rarity.startsWith("\u2248") ? "\u2248 " + rarity : rarity;
+  let rolls = 1;
+  const raw = data.Rolls;
+  if (raw !== undefined && raw !== null && raw !== "" && raw !== 0 && raw !== false) {
+    try { rolls = pyInt(raw); } catch (e) { rolls = 1; }
+  }
+  if (rolls > 1) shown = shown + " \u00b7 " + rolls + " rolls";
+  return [shown, false];
+}
+
+function formatQuantity(data) {
+  const display = data["Drop Quantity"];
+  if (display != null && display !== "") {
+    const text = stripHtml(String(display));
+    if (text) return [text, false];
+  }
+  const low = data["Quantity Low"];
+  const high = data["Quantity High"];
+  const lowEmpty = low == null || low === "";
+  const highEmpty = high == null || high === "";
+  if (lowEmpty && highEmpty) return [null, true];
+  if (low === high || highEmpty) return [String(low), false];
+  if (lowEmpty) return [String(high), false];
+  return [low + "\u2013" + high, false];
+}
+
+function dropDisplayName(raw) {
+  raw = stripHtml(raw) || "Unknown source";
+  const hash = raw.indexOf("#");
+  if (hash >= 0) {
+    const page = raw.slice(0, hash);
+    const anchor = raw.slice(hash + 1).trim();
+    const label = anchor.replace(/_/g, " ");
+    const name = label && label.toLowerCase() !== page.toLowerCase() ? page + " (" + label + ")" : page;
+    return [name, page.trim(), anchor];
+  }
+  return [raw, raw, null];
+}
+
+function cmpLower(a, b) {
+  const al = a.toLowerCase();
+  const bl = b.toLowerCase();
+  if (al < bl) return -1;
+  if (al > bl) return 1;
+  return 0;
+}
+
+async function fetchJson(params, timeout) {
+  const query = new URLSearchParams(params).toString();
+  const url = WIKI_API + "?" + query;
+  const ms = timeout || 40000;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" }, signal: ctrl.signal });
+    if (!res.ok) throw new Error("Wiki returned HTTP " + res.status);
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      throw new Error("Wiki returned data that was not JSON");
+    }
+  } catch (err) {
+    if (err && typeof err.message === "string" && (err.message.startsWith("Wiki returned") || err.message.startsWith("Wiki returned data"))) throw err;
+    const reason = err && err.name === "AbortError" ? "timed out" : (err && err.message) || err;
+    throw new Error("Could not reach the wiki (" + reason + ")");
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function luaQuote(value) {
+  return "'" + String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+}
+
+async function bucket(query) {
+  const data = await fetchJson({
+    action: "bucket",
+    format: "json",
+    formatversion: "2",
+    query: query,
+  }, 60000);
+  if (data && data.error) throw new Error(typeof data.error === "string" ? data.error : JSON.stringify(data.error));
+  const rows = data ? data.bucket : null;
+  if (rows == null) return [];
+  if (!Array.isArray(rows)) throw new Error("Unexpected bucket response");
+  return rows;
+}
+
+async function buildDrops(itemName) {
+  const warnings = [];
+  const rows = [];
+  let offset = 0;
+  try {
+    while (offset < MAX_DROPS) {
+      const query = "bucket('dropsline').select('drop_json','rare_drop_table').where('item_name'," + luaQuote(itemName) + ").limit(500).offset(" + offset + ").run()";
+      const batch = await bucket(query);
+      for (const row of batch) rows.push(row);
+      if (batch.length < 500) break;
+      offset += 500;
+    }
+  } catch (exc) {
+    warnings.push("Drop table could not be loaded (" + exc.message + ").");
+    return [[], warnings];
+  }
+  const grouped = new Map();
+  for (const row of rows) {
+    let data;
+    try {
+      data = JSON.parse(row.drop_json || "{}");
+    } catch (e) {
+      continue;
+    }
+    const dropType = String(data["Drop type"] || "other").trim().toLowerCase();
+    const titled = dropType.replace(/_/g, " ").replace(/[A-Za-z0-9]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    const title = DROP_GROUPS[dropType] || titled || "Other drops";
+    const named = dropDisplayName(String(data["Dropped from"] || "Unknown"));
+    const name = named[0];
+    const page = named[1];
+    const anchor = named[2];
+    const qtyPair = formatQuantity(data);
+    const ratePair = formatRate(data);
+    const quantity = qtyPair[0];
+    const qtyMissing = qtyPair[1];
+    const rate = ratePair[0];
+    const rateMissing = ratePair[1];
+    const detailBits = [];
+    const levels = formatLevels(data["Drop level"]);
+    if (levels) detailBits.push("Level " + levels);
+    if (row.rare_drop_table) detailBits.push("Via the rare drop table (rate is the wiki's effective chance)");
+    const notes = stripHtml(String(data["Rarity Notes"] || ""));
+    let nameNotes = stripHtml(String(data["Name Notes"] || ""));
+    const members = nameNotes.toLowerCase().includes("(m)") || nameNotes.toLowerCase().includes("members");
+    nameNotes = stripChars(nameNotes.replace(/\(m\)/ig, ""), " -");
+    if (notes) detailBits.push(notes);
+    if (nameNotes) detailBits.push(nameNotes);
+    if (members) detailBits.push("Members");
+    if (!grouped.has(title)) grouped.set(title, []);
+    grouped.get(title).push({
+      name: name,
+      url: page ? wikiUrl(page, anchor) : null,
+      amount: { text: quantity || "Not listed", missing: !!(qtyMissing || !quantity), label: "Amount" },
+      rate: { text: rate || "Not listed", missing: !!(rateMissing || !rate), label: "Rate" },
+      price: null,
+      detail: detailBits.join(" \u00b7 "),
+      sort: raritySortKey(rate),
+    });
+  }
+  const order = ["Monster drops", "Pickpocketing", "Hunter", "Sailing", "Chests, clues and other drops"];
+  const groups = [];
+  for (const [title, sources] of grouped) {
+    sources.sort((a, b) => {
+      const an = a.sort == null ? 1 : 0;
+      const bn = b.sort == null ? 1 : 0;
+      if (an !== bn) return an - bn;
+      const as = a.sort || 0;
+      const bs = b.sort || 0;
+      if (as !== bs) return as < bs ? -1 : 1;
+      return cmpLower(a.name, b.name);
+    });
+    groups.push({ title: title, kind: "drops", sources: sources });
+  }
+  groups.sort((a, b) => {
+    const ia = order.indexOf(a.title);
+    const ib = order.indexOf(b.title);
+    return (ia < 0 ? 50 : ia) - (ib < 0 ? 50 : ib);
+  });
+  return [groups, warnings];
+}
+
+function formatCoins(value, currency) {
+  if (value == null) return null;
+  const text = String(value).trim();
+  if (!text || text.toLowerCase() === "n/a" || text.toLowerCase() === "na" || text.toLowerCase() === "none" || text === "-") return null;
+  const compact = text.replace(/,/g, "");
+  let shown = text;
+  if (/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(compact)) {
+    const number = Number(compact);
+    if (Number.isFinite(number)) {
+      if (Number.isInteger(number)) shown = Math.trunc(number).toLocaleString("en-US");
+      else shown = number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+  }
+  const cur = String(currency || "coins").trim() || "coins";
+  if (cur.toLowerCase() === "coins") return shown + " coins";
+  return shown + " " + cur;
+}
+
+function restockLabel(ticks) {
+  if (ticks == null) return null;
+  const raw = String(ticks).trim();
+  if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(raw)) return raw || null;
+  const seconds = Number(raw) * 0.6;
+  if (Math.abs(seconds - Math.round(seconds)) < 1e-6) return String(Math.round(seconds)) + "s";
+  return seconds.toFixed(1) + "s";
+}
+
+async function buildShops(itemName) {
+  let rows;
+  try {
+    rows = await bucket(
+      "bucket('storeline').select('sold_by','sold_item','store_stock','store_buy_price','store_sell_price','store_currency','restock_time','store_notes','sold_item_json').where('sold_item'," + luaQuote(itemName) + ").limit(200).run()"
+    );
+  } catch (exc) {
+    return [[], ["Shops could not be loaded (" + exc.message + ")."]];
+  }
+  const sources = [];
+  for (const row of rows) {
+    let extra = {};
+    if (row.sold_item_json) {
+      try { extra = JSON.parse(row.sold_item_json); } catch (e) { extra = {}; }
+    }
+    const seller = stripHtml(String(row.sold_by || extra["Sold by"] || "Shop"));
+    const notes = stripHtml(String(row.store_notes || extra["Store notes"] || ""));
+    let name = seller;
+    if (notes) name = (seller + " " + notes).trim();
+    const location = cleanWiki(String(extra.Location || "")).trim();
+    const currency = row.store_currency || extra["Store currency"] || "Coins";
+    const youPay = formatCoins(row.store_sell_price || extra["Store sell price"], currency);
+    const shopPays = formatCoins(row.store_buy_price || extra["Store buy price"], currency);
+    let stock = row.store_stock;
+    if (stock == null || String(stock).trim() === "") stock = extra["Store stock"];
+    const stockText = stock != null ? String(stock).trim() : "";
+    const restock = restockLabel(row.restock_time || extra["Restock time"]);
+    const members = String(extra.Members || "");
+    const detail = [];
+    if (location) detail.push(location);
+    if (members.toLowerCase() === "yes") detail.push("Members");
+    else if (members.toLowerCase() === "no") detail.push("Free-to-play");
+    if (restock) detail.push("Restock " + restock);
+    const priceBits = [];
+    if (youPay) priceBits.push(youPay);
+    if (shopPays) priceBits.push("Shop pays " + shopPays);
+    const priceText = priceBits.length ? priceBits.join(" \u00b7 ") : "Not listed";
+    sources.push({
+      name: name,
+      url: seller ? wikiUrl(seller) : null,
+      amount: { text: stockText || "Not listed", missing: !stockText, label: "Stock" },
+      rate: { text: "Not listed", missing: true, label: "Rate" },
+      price: { text: priceText, missing: !priceBits.length, youPay: youPay, shopPays: shopPays, label: "Price" },
+      detail: detail.join(" \u00b7 "),
+      sort: null,
+    });
+  }
+  sources.sort((a, b) => cmpLower(a.name, b.name));
+  if (!sources.length) return [[], []];
+  return [[{ title: "Shops", kind: "shops", sources: sources }], []];
+}
+
+function stripChars(s, chars) {
+  let start = 0;
+  let end = s.length;
+  while (start < end && chars.includes(s[start])) start += 1;
+  while (end > start && chars.includes(s[end - 1])) end -= 1;
+  return s.slice(start, end);
+}
+
+function joinClean(value) {
+  if (Array.isArray(value)) return value.filter((x) => x).map((x) => cleanWiki(String(x)).trim()).join(", ");
+  return cleanWiki(String(value || "")).trim();
+}
+
+async function buildRecipes(pageTitle) {
+  let rows;
+  try {
+    rows = await bucket(
+      "bucket('recipe').select('production_json','uses_skill','uses_facility','uses_material','uses_tool').where('page_name'," + luaQuote(pageTitle) + ").limit(50).run()"
+    );
+  } catch (exc) {
+    return [[], ["Recipes could not be loaded (" + exc.message + ")."]];
+  }
+  const sources = [];
+  for (const row of rows) {
+    const raw = row.production_json;
+    if (!raw) continue;
+    let data;
+    try { data = JSON.parse(raw); } catch (e) { continue; }
+    const output = data.output == null || data.output === "" ? {} : data.output;
+    let outputName = "";
+    let outputQty = null;
+    if (typeof output === "string") {
+      outputName = cleanWiki(output).trim();
+    } else if (output && typeof output === "object" && !Array.isArray(output)) {
+      outputName = cleanWiki(String(output.name || "")).trim();
+      outputQty = output.quantity;
+    }
+    if (!outputName || outputName.toLowerCase() !== pageTitle.toLowerCase()) continue;
+    const skills = [];
+    for (const skill of data.skills || []) {
+      if (skill && typeof skill === "object" && !Array.isArray(skill)) {
+        let bit = skill.name || "Skill";
+        if (skill.level) bit += " " + skill.level;
+        if (skill.experience) bit += " (" + skill.experience + " xp)";
+        const boost = skill.boostable == null ? "None" : skill.boostable;
+        if (String(boost).toLowerCase() === "yes") bit += ", boostable";
+        skills.push(bit);
+      } else if (skill) skills.push(String(skill));
+    }
+    let facilities = joinClean(data.facilities || "");
+    if (facilities.toLowerCase() === "" || facilities.toLowerCase() === "n/a" || facilities.toLowerCase() === "none") facilities = "";
+    const tools = joinClean(data.tools || "");
+    const materials = [];
+    for (const mat of data.materials || []) {
+      if (mat && typeof mat === "object" && !Array.isArray(mat)) {
+        const qty = mat.quantity;
+        const nm = mat.name || "material";
+        materials.push(qty != null && qty !== "" ? qty + " \u00d7 " + nm : nm);
+      } else if (mat) materials.push(String(mat));
+    }
+    const detail = [];
+    if (skills.length) detail.push(skills.join("; "));
+    if (facilities) detail.push("at " + facilities);
+    if (materials.length) detail.push("Uses " + materials.join(", "));
+    if (tools) detail.push("Tools: " + tools);
+    if (data.members === true) detail.push("Members");
+    const qtyText = outputQty != null && outputQty !== "" ? String(outputQty).trim() : null;
+    const facilityName = facilities || (skills.length ? skills[0] : "Recipe");
+    const name = !skills.length ? facilityName : stripChars(skills[0].split(" (")[0] + " \u2014 " + facilityName, " \u2014");
+    sources.push({
+      name: name,
+      url: facilities && !facilities.includes(",") ? wikiUrl(facilities) : wikiUrl(pageTitle),
+      amount: { text: qtyText || "Not listed", missing: !qtyText, label: "Amount" },
+      rate: { text: "Not listed", missing: true, label: "Rate" },
+      price: null,
+      detail: (detail.length ? detail.join(" \u00b7 ") + " \u00b7 Created, not a drop" : "Created, not a drop"),
+      sort: null,
+    });
+  }
+  if (!sources.length) return [[], []];
+  return [[{ title: "Created", kind: "recipes", sources: sources }], []];
+}
+
+function parseSpawnLines(wikitext, respawn) {
+  const sources = [];
+  for (const pair of iterTemplates(wikitext, "itemspawnline")) {
+    const args = balancedSplit(pair[1]);
+    let location = null;
+    let members = null;
+    let coords = 0;
+    for (const arg of args.slice(1)) {
+      if (arg.includes("=")) {
+        const eq = arg.indexOf("=");
+        const key = arg.slice(0, eq).trim().toLowerCase();
+        const value = arg.slice(eq + 1).trim();
+        if (key === "location") location = cleanWiki(value).trim();
+        else if (key === "members") members = value.trim();
+      } else if (/\d+\s*,\s*\d+/.test(arg)) coords += 1;
+    }
+    if (!location && coords === 0) continue;
+    const detail = [];
+    if (coords) detail.push(coords + " spawn point" + (coords !== 1 ? "s" : ""));
+    detail.push("Quantity on each tile is 1 unless the page says otherwise");
+    if (members) {
+      const ml = members.toLowerCase();
+      detail.push(ml.startsWith("y") ? "Members" : ml.startsWith("n") ? "Free-to-play" : members);
+    }
+    if (respawn) detail.push("Respawn " + respawn);
+    detail.push("Ground item \u2014 the wiki does not give a drop rate");
+    sources.push({
+      name: location || "Ground spawn",
+      url: null,
+      amount: { text: "1", missing: false, label: "Amount" },
+      rate: { text: "Not listed", missing: true, label: "Rate" },
+      price: null,
+      detail: detail.join(" \u00b7 "),
+      sort: null,
+    });
+  }
+  return sources;
+}
+
+function parseWikitable(block) {
+  let body = String(block).replace(/^\{\|.*$/gm, "");
+  body = body.replace(/^\|\}.*$/gm, "");
+  body = body.replace(/^\|\+.*$/gm, "");
+  const chunks = body.split(/\n\|-/);
+  let headers = [];
+  const rows = [];
+  for (let chunk of chunks) {
+    chunk = chunk.trim();
+    if (!chunk) continue;
+    chunk = chunk.split("!!").join("\n!").split("||").join("\n|");
+    const cells = [];
+    let headerish = true;
+    for (let line of chunk.split("\n")) {
+      line = line.trim();
+      if (!line || line.startsWith("|-") || line.startsWith("|}")) continue;
+      if (line[0] !== "|" && line[0] !== "!") continue;
+      if (line[0] !== "!") headerish = false;
+      let cell = line.slice(1).trim();
+      if (cell.includes("|")) {
+        const idx = cell.indexOf("|");
+        const left = cell.slice(0, idx);
+        const right = cell.slice(idx + 1);
+        if (!left.includes("[[") && !left.includes("{{") && left.length < 80) cell = right.trim();
+      }
+      cells.push(cleanWiki(cell).trim());
+    }
+    const kept = cells.filter((c) => c);
+    if (!kept.length) continue;
+    if (headerish && !headers.length) headers = kept;
+    else rows.push(kept);
+  }
+  return [headers, rows];
+}
+
+function otherFromWikitext(wikitext, itemName) {
+  const itemSources = sectionBody(wikitext, "Item sources");
+  const shops = sectionBody(wikitext, "Shop locations");
+  let combined = itemSources;
+  if (shops && !itemSources.includes(shops)) combined += "\n" + shops;
+  if (!combined.trim()) return [];
+  combined = removeTemplatesNamed(combined, ["drop sources", "store locations list", "itemspawnline", "itemspawntablehead", "itemspawntablebottom"]);
+  const matches = [...combined.matchAll(/^(=+)([^=\n]+)\1\s*$/gm)];
+  const subsections = [];
+  if (!matches.length) subsections.push(["Other", combined]);
+  else {
+    if (matches[0].index > 0 && combined.slice(0, matches[0].index).trim()) {
+      subsections.push(["Other", combined.slice(0, matches[0].index)]);
+    }
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      const end = i + 1 < matches.length ? matches[i + 1].index : combined.length;
+      const title = cleanWiki(match[2]).trim() || "Other";
+      subsections.push([title, combined.slice(match.index + match[0].length, end)]);
+    }
+  }
+  const sources = [];
+  for (const pair of subsections) {
+    const title = pair[0];
+    let body = pair[1];
+    let bodyWo = body;
+    let tableHits = 0;
+    for (const table of body.matchAll(/\{\|[\s\S]*?\|\}/g)) {
+      const parsed = parseWikitable(table[0]);
+      const headers = parsed[0];
+      const rows = parsed[1];
+      bodyWo = bodyWo.replace(table[0], "");
+      for (const row of rows) {
+        if (!row.length) continue;
+        const first = row[0];
+        const rest = row.slice(1);
+        const labelPairs = [];
+        rest.forEach((cell, idx) => {
+          const head = idx + 1 < headers.length ? headers[idx + 1] : "Column " + (idx + 2);
+          labelPairs.push(head + ": " + cell);
+        });
+        const amountText = labelPairs.length ? labelPairs.join("; ") : null;
+        const sameItem = first.toLowerCase() === itemName.toLowerCase();
+        tableHits += 1;
+        sources.push({
+          name: sameItem ? title : first,
+          url: null,
+          amount: { text: amountText || "Not listed", missing: !amountText, label: "Amount" },
+          rate: { text: "Not listed", missing: true, label: "Rate" },
+          price: null,
+          detail: sameItem ? "Listed in the wiki sources section" : title,
+          sort: null,
+        });
+      }
+    }
+    const prose = tableHits ? [] : plainSentences(bodyWo);
+    for (const sentence of prose.slice(0, 2)) {
+      if (sentence.length < 50) continue;
+      sources.push({
+        name: title && title.toLowerCase() !== "other" ? title : "Wiki note",
+        url: null,
+        amount: { text: "Not listed", missing: true, label: "Amount" },
+        rate: { text: "Not listed", missing: true, label: "Rate" },
+        price: null,
+        detail: sentence,
+        sort: null,
+      });
+    }
+  }
+  if (!sources.length) return [];
+  return [{ title: "Other sources", kind: "other", sources: sources }];
+}
+
+function articleNotes(wikitext, itemName) {
+  const notes = acquisitionNotes(wikitext);
+  const sources = notes.map((sentence) => ({
+    name: "From the article",
+    url: wikiUrl(itemName),
+    amount: { text: "Not listed", missing: true, label: "Amount" },
+    rate: { text: "Not listed", missing: true, label: "Rate" },
+    price: null,
+    detail: sentence,
+    sort: null,
+  }));
+  if (!sources.length) return [];
+  return [{ title: "Also described on the page", kind: "notes", sources: sources }];
+}
+
+function pickInfobox(rows, title) {
+  if (!rows || !rows.length) return null;
+  const wanted = ("file:" + title + ".png").toLowerCase();
+  const imagesOf = (row) => row.image || [];
+  const questOf = (row) => stripHtml(String(row.quest || "")).toLowerCase();
+  const matchesImage = (row) => {
+    const images = imagesOf(row);
+    for (const img of images) if (String(img).toLowerCase() === wanted) return true;
+    return false;
+  };
+  for (const row of rows) {
+    if (matchesImage(row)) {
+      const quest = questOf(row);
+      if (quest === "" || quest === "no" || quest === "none") return row;
+    }
+  }
+  for (const row of rows) if (matchesImage(row)) return row;
+  for (const row of rows) {
+    const quest = questOf(row);
+    if (row.tradeable && (quest === "" || quest === "no" || quest === "none")) return row;
+  }
+  return rows[0];
+}
+
+async function loadInfobox(title) {
+  let rows;
+  try {
+    rows = await bucket(
+      "bucket('infobox_item').select('item_name','image','examine','is_members_only','tradeable','quest','item_id').where('item_name'," + luaQuote(title) + ").limit(20).run()"
+    );
+  } catch (exc) {
+    return [null, ["Item infobox could not be loaded (" + exc.message + ")."]];
+  }
+  return [pickInfobox(rows, title), []];
+}
+
+async function loadWikitext(title) {
+  const data = await fetchJson({
+    action: "query",
+    prop: "revisions",
+    rvprop: "content",
+    rvslots: "main",
+    titles: title,
+    redirects: "1",
+    format: "json",
+    formatversion: "2",
+  });
+  const pages = (data.query && data.query.pages) || [];
+  if (!pages.length || pages[0].missing) throw new Error("No wiki page titled \u201c" + title + "\u201d.");
+  const revs = pages[0].revisions || [];
+  if (!revs.length) throw new Error("Wiki page had no content.");
+  const content = revs[0].slots && revs[0].slots.main ? revs[0].slots.main.content : null;
+  if (content == null) throw new Error("Wiki page had no content.");
+  return [content, pages[0].title || title];
+}
+
+function suggestWords(query) {
+  const parts = String(query).toLowerCase().match(/[a-z0-9]+/g);
+  return parts && parts.length ? parts.join(" ") : "";
+}
+
+async function suggest(query) {
+  query = String(query || "").trim();
+  if (!query) return [];
+  const needle = query.toLowerCase();
+  const words = suggestWords(query);
+  if (!words) return [];
+  const wildcard = "intitle:*" + words + "*";
+  const base = {
+    action: "query",
+    list: "search",
+    srnamespace: "0",
+    srlimit: "30",
+    format: "json",
+    formatversion: "2",
+  };
+  const data = await fetchJson(Object.assign({}, base, { srsearch: wildcard, srlimit: "50" }));
+  const rows = (data && data.query && data.query.search) || [];
+  const out = [];
+  const seen = new Set();
+  for (const row of rows) {
+    const title = row && row.title;
+    if (!title || !String(title).toLowerCase().includes(needle)) continue;
+    const key = String(title).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ title: title, url: wikiUrl(title) });
+  }
+  out.sort((a, b) => {
+    const as = a.title.toLowerCase();
+    const bs = b.title.toLowerCase();
+    const aWord = as.split(/[^a-z0-9]+/).some((w) => w.startsWith(needle));
+    const bWord = bs.split(/[^a-z0-9]+/).some((w) => w.startsWith(needle));
+    if (aWord !== bWord) return aWord ? -1 : 1;
+    return as.length - bs.length;
+  });
+  return out.slice(0, 8);
+}
+
+async function resolveTitle(query) {
+  query = String(query || "").trim();
+  const data = await fetchJson({
+    action: "query",
+    titles: query,
+    redirects: "1",
+    format: "json",
+    formatversion: "2",
+  });
+  const pages = (data.query && data.query.pages) || [];
+  if (pages.length && !pages[0].missing && pages[0].ns === 0) return [pages[0].title, []];
+  const matches = await suggest(query);
+  if (!matches.length) return [null, []];
+  const lowered = query.toLowerCase();
+  for (const match of matches) {
+    if (match.title.toLowerCase() === lowered) return [match.title, matches];
+  }
+  if (matches.length === 1) return [matches[0].title, matches];
+  return [null, matches];
+}
+
+function knownWikiError(err) {
+  const msg = err && err.message ? err.message : "";
+  return msg.startsWith("Wiki returned") || msg.startsWith("Could not reach the wiki") || msg.startsWith("No wiki page") || msg.startsWith("Wiki page had") || msg.startsWith("Unexpected bucket");
+}
+
+async function buildItem(query) {
+  try {
+    return await buildItemInner(query);
+  } catch (err) {
+    if (knownWikiError(err)) return { ok: false, error: err.message };
+    return { ok: false, error: "The lookup hit an unexpected error." };
+  }
+}
+
+async function buildItemInner(query) {
+  const key = String(query || "").trim().toLowerCase();
+  const now = Date.now();
+  const hit = cache.get(key);
+  if (hit && now - hit[0] < CACHE_TTL) return hit[1];
+
+  const resolved = await resolveTitle(query);
+  let title = resolved[0];
+  const matches = resolved[1];
+  if (!title) {
+    return {
+      ok: false,
+      ambiguous: matches.length > 0,
+      matches: matches,
+      error: matches.length ? null : "No Old School RuneScape wiki page found for \u201c" + String(query).trim() + "\u201d.",
+    };
+  }
+
+  const loaded = await loadWikitext(title);
+  const wikitext = loaded[0];
+  title = loaded[1];
+  if (/\{\{\s*Disambiguation/i.test(wikitext) || title.toLowerCase().endsWith("(disambiguation)")) {
+    const links = [];
+    const seen = new Set();
+    for (const match of wikitext.matchAll(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g)) {
+      const name = match[1].trim();
+      if (name.includes(":") || seen.has(name.toLowerCase())) continue;
+      seen.add(name.toLowerCase());
+      links.push({ title: name, url: wikiUrl(name) });
+      if (links.length >= 12) break;
+    }
+    return { ok: false, ambiguous: true, matches: links, error: null };
+  }
+
+  const infoPair = await loadInfobox(title);
+  const dropPair = await buildDrops(title);
+  const shopPair = await buildShops(title);
+  const recipePair = await buildRecipes(title);
+  const info = infoPair[0];
+  const warnings = infoPair[1].concat(dropPair[1], shopPair[1], recipePair[1]);
+  const respawn = parseRespawn(wikitext);
+  const spawns = parseSpawnLines(wikitext, respawn);
+  const groups = [];
+  for (const g of dropPair[0]) groups.push(g);
+  for (const g of shopPair[0]) groups.push(g);
+  for (const g of recipePair[0]) groups.push(g);
+  if (spawns.length) groups.push({ title: "Ground spawns", kind: "spawns", sources: spawns });
+  for (const g of otherFromWikitext(wikitext, title)) groups.push(g);
+  for (const g of articleNotes(wikitext, title)) groups.push(g);
+
+  let image = null;
+  let examine = null;
+  let members = null;
+  let quest = null;
+  if (info) {
+    const images = info.image || [];
+    image = imageUrl(images.length ? images[0] : null);
+    examine = stripHtml(String(info.examine || "")) || null;
+    members = info.is_members_only;
+    const questRaw = cleanWiki(String(info.quest || "")).trim();
+    if (questRaw && questRaw.toLowerCase() !== "no" && questRaw.toLowerCase() !== "none") quest = questRaw;
+  }
+  let total = 0;
+  for (const group of groups) total += group.sources.length;
+  const payload = {
+    ok: true,
+    title: title,
+    url: wikiUrl(title),
+    examine: examine,
+    members: members,
+    quest: quest,
+    image: image,
+    groups: groups,
+    total: total,
+    warnings: warnings,
+    matches: matches,
+  };
+  const stamped = [Date.now(), payload];
+  cache.set(key, stamped);
+  cache.set(title.toLowerCase(), stamped);
+  return payload;
+}
+
+  </script>
+  <script>
+if (typeof document !== "undefined") {
+const form = document.getElementById("search-form");
+const input = document.getElementById("q");
+const suggestEl = document.getElementById("suggest");
+const statusEl = document.getElementById("status");
+const resultsEl = document.getElementById("results");
+const submitBtn = document.getElementById("lookup-btn");
+
+let suggestTimer = 0;
+let suggestItems = [];
+let activeSuggest = -1;
+let current = null;
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+function setStatus(kind, node) {
+  statusEl.hidden = false;
+  statusEl.className = "status" + (kind ? " " + kind : "");
+  statusEl.replaceChildren(node);
+}
+
+function clearStatus() {
+  statusEl.hidden = true;
+  statusEl.replaceChildren();
+}
+
+function hideSuggest() {
+  suggestEl.hidden = true;
+  suggestEl.replaceChildren();
+  suggestItems = [];
+  activeSuggest = -1;
+}
+
+async function lookup(query) {
+  const q = query.trim();
+  if (!q) return;
+  input.value = q;
+  hideSuggest();
+  resultsEl.hidden = true;
+  resultsEl.replaceChildren();
+  current = null;
+  submitBtn.disabled = true;
+  setStatus("", el("p", null, "Checking the Old School RuneScape wiki…"));
+  try {
+    const url = new URL(location.href);
+    url.searchParams.set("q", q);
+    history.replaceState(null, "", url);
+  } catch (err) {
+    /* Opening the file directly can reject history updates. The lookup still runs. */
+  }
+  try {
+    const data = await buildItem(q);
+    if (data.ambiguous) {
+      showAmbiguous(data.matches || []);
+      return;
+    }
+    if (!data.ok) {
+      setStatus("error", el("p", null, data.error || "No page found."));
+      return;
+    }
+    current = data;
+    clearStatus();
+    renderItem(data);
+  } catch (err) {
+    setStatus("error", el("p", null, "Could not reach the wiki."));
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+function showAmbiguous(matches) {
+  const wrap = el("div");
+  wrap.append(el("p", null, "Several wiki pages match. Pick one."));
+  if (!matches.length) {
+    wrap.append(el("p", null, "Nothing came back from the wiki."));
+  }
+  const list = el("ul");
+  matches.forEach((match) => {
+    const li = el("li");
+    const btn = el("button", null, match.title);
+    btn.type = "button";
+    btn.addEventListener("click", () => lookup(match.title));
+    li.append(btn);
+    list.append(li);
+  });
+  wrap.append(list);
+  setStatus("", wrap);
+}
+
+function statBox(stat) {
+  if (!stat) return null;
+  const box = el("div", "stat " + (stat.label || "").toLowerCase() + (stat.missing ? " missing" : ""));
+  box.append(el("span", "stat-label", stat.label || ""));
+  const value = el("span", "stat-value", stat.missing ? "Not listed" : stat.text);
+  box.append(value);
+  if (!stat.missing && stat.youPay && stat.shopPays) {
+    value.textContent = stat.youPay;
+    box.append(el("span", "stat-sub", "Shop pays " + stat.shopPays.replace(/ coins$/, "") + (stat.shopPays.endsWith("coins") ? " coins" : "")));
+  }
+  return box;
+}
+
+function renderItem(data) {
+  resultsEl.hidden = false;
+  resultsEl.replaceChildren();
+
+  const head = el("div", "item-head");
+  if (data.image) {
+    const img = el("img");
+    img.src = data.image;
+    img.alt = "";
+    head.append(img);
+  }
+  const text = el("div");
+  text.append(el("h2", null, data.title));
+  if (data.examine) text.append(el("p", "item-meta", data.examine));
+  const badges = el("div", "badges");
+  if (data.members === true) badges.append(el("span", "badge", "Members"));
+  if (data.members === false) badges.append(el("span", "badge", "Free-to-play"));
+  if (data.quest) badges.append(el("span", "badge", "Quest: " + data.quest));
+  const link = el("a", "badge", "Wiki page");
+  link.href = data.url;
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  badges.append(link);
+  text.append(badges);
+  head.append(text);
+  resultsEl.append(head);
+
+  if (data.warnings && data.warnings.length) {
+    const warn = el("div");
+    warn.append(el("p", null, "Some wiki data did not load."));
+    const ul = el("ul");
+    data.warnings.forEach((w) => ul.append(el("li", null, w)));
+    warn.append(ul);
+    const box = el("div");
+    box.append(warn);
+    const holder = el("div");
+    resultsEl.append(holder);
+    setStatus("error", warn);
+  }
+
+  const toolbar = el("div", "toolbar");
+  const filter = el("input");
+  filter.type = "search";
+  filter.placeholder = "Filter sources";
+  filter.setAttribute("aria-label", "Filter sources");
+  const sort = el("select");
+  sort.setAttribute("aria-label", "Sort sources");
+  [["wiki", "Wiki order (common first)"], ["rare", "Rarest first"], ["name", "Name A–Z"]].forEach(([value, label]) => {
+    const opt = el("option", null, label);
+    opt.value = value;
+    sort.append(opt);
+  });
+  const count = el("span", "count");
+  toolbar.append(filter, sort, count);
+  resultsEl.append(toolbar);
+
+  const groupsHost = el("div");
+  resultsEl.append(groupsHost);
+
+  function paint() {
+    const needle = filter.value.trim().toLowerCase();
+    groupsHost.replaceChildren();
+    let shown = 0;
+    (data.groups || []).forEach((group) => {
+      let sources = group.sources.slice();
+      if (needle) {
+        sources = sources.filter((src) => {
+          const hay = (src.name + " " + (src.detail || "") + " " + (src.amount && src.amount.text) + " " + (src.rate && src.rate.text)).toLowerCase();
+          return hay.includes(needle);
+        });
+      }
+      const mode = sort.value;
+      if (mode === "name") {
+        sources.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (mode === "rare") {
+        sources.sort((a, b) => {
+          const as = a.sort == null ? -1 : a.sort;
+          const bs = b.sort == null ? -1 : b.sort;
+          return bs - as || a.name.localeCompare(b.name);
+        });
+      } else {
+        sources.sort((a, b) => {
+          const as = a.sort == null ? Number.POSITIVE_INFINITY : a.sort;
+          const bs = b.sort == null ? Number.POSITIVE_INFINITY : b.sort;
+          return as - bs || a.name.localeCompare(b.name);
+        });
+      }
+      if (!sources.length) return;
+      shown += sources.length;
+      const hasPrice = sources.some((src) => src.price);
+      const section = el("section", "group" + (hasPrice ? "" : " no-price"));
+      section.append(el("h3", null, group.title + " (" + sources.length + ")"));
+      const cols = el("div", "cols");
+      cols.append(el("span", null, "Source"));
+      cols.append(el("span", null, (sources[0].amount && sources[0].amount.label) || "Amount"));
+      cols.append(el("span", null, "Rate"));
+      if (hasPrice) cols.append(el("span", null, "Price"));
+      section.append(cols);
+      sources.forEach((src) => {
+        const row = el("article", "source");
+        const main = el("div", "source-main");
+        const name = src.url ? el("a", "source-name", src.name) : el("div", "source-name", src.name);
+        if (src.url) {
+          name.href = src.url;
+          name.target = "_blank";
+          name.rel = "noreferrer";
+        }
+        main.append(name);
+        if (src.detail) main.append(el("p", "source-detail", src.detail));
+        row.append(main);
+        row.append(statBox(src.amount));
+        row.append(statBox(src.rate));
+        if (hasPrice) row.append(statBox(src.price || { label: "Price", text: "Not listed", missing: true }));
+        section.append(row);
+      });
+      groupsHost.append(section);
+    });
+    const total = data.total || 0;
+    if (!data.groups || !data.groups.length) {
+      const empty = el("div", "status");
+      const p = el("p", null, "No parseable sources on this page. The wiki may only describe the item in prose, or the sources template is empty.");
+      empty.append(p);
+      const a = el("a", null, "Open the wiki page");
+      a.href = data.url;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      empty.append(a);
+      groupsHost.append(empty);
+      count.textContent = "0 sources";
+      return;
+    }
+    count.textContent = shown === total ? total + " sources" : shown + " of " + total + " sources";
+    if (!shown) {
+      groupsHost.append(el("p", "empty-group", "Nothing matches that filter."));
+    }
+  }
+
+  filter.addEventListener("input", paint);
+  sort.addEventListener("change", paint);
+  paint();
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  lookup(input.value);
+});
+submitBtn.addEventListener("click", () => lookup(input.value));
+
+document.querySelectorAll("[data-try]").forEach((btn) => {
+  btn.addEventListener("click", () => lookup(btn.dataset.try));
+});
+
+input.addEventListener("input", () => {
+  clearTimeout(suggestTimer);
+  const q = input.value.trim();
+  if (q.length < 2) {
+    hideSuggest();
+    return;
+  }
+  suggestTimer = setTimeout(async () => {
+    try {
+      const matches = await suggest(q);
+      suggestItems = matches || [];
+      suggestEl.replaceChildren();
+      if (!suggestItems.length) {
+        suggestEl.hidden = true;
+        return;
+      }
+      suggestItems.forEach((match, index) => {
+        const li = el("li");
+        const btn = el("button", null, match.title);
+        btn.type = "button";
+        btn.addEventListener("click", () => lookup(match.title));
+        li.append(btn);
+        suggestEl.append(li);
+      });
+      suggestEl.hidden = false;
+      activeSuggest = -1;
+    } catch (err) {
+      hideSuggest();
+    }
+  }, 180);
+});
+
+input.addEventListener("keydown", (event) => {
+  if (suggestEl.hidden || !suggestItems.length) return;
+  const buttons = [...suggestEl.querySelectorAll("button")];
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    activeSuggest = Math.min(buttons.length - 1, activeSuggest + 1);
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    activeSuggest = Math.max(0, activeSuggest - 1);
+  } else if (event.key === "Escape") {
+    hideSuggest();
+    return;
+  } else if (event.key === "Enter" && activeSuggest >= 0) {
+    event.preventDefault();
+    lookup(suggestItems[activeSuggest].title);
+    return;
+  } else {
+    return;
+  }
+  buttons.forEach((btn, i) => btn.setAttribute("aria-selected", i === activeSuggest ? "true" : "false"));
+  if (buttons[activeSuggest]) input.value = suggestItems[activeSuggest].title;
+});
+
+document.addEventListener("click", (event) => {
+  if (!form.contains(event.target)) hideSuggest();
+});
+
+const params = new URLSearchParams(location.search);
+if (params.get("q")) lookup(params.get("q"));
+
+}
+
+  </script>
+  <noscript>This page needs JavaScript to query the Old School RuneScape wiki.</noscript>
+</body>
+</html>
